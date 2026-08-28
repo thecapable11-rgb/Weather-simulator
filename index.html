@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Weather Lab</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#08111d;
+color:#fff;
+}
+
+.top{
+padding:18px;
+background:#0d1b2a;
+border-bottom:1px solid #26384d;
+}
+
+.top h1{
+margin:0;
+font-size:27px;
+}
+
+.top p{
+margin:6px 0 0;
+color:#8fa5bb;
+font-size:13px;
+}
+
+.app{
+max-width:1000px;
+margin:auto;
+padding:14px;
+}
+
+.display{
+height:430px;
+border-radius:24px;
+overflow:hidden;
+position:relative;
+background:linear-gradient(#1976b9,#9edcf8);
+}
+
+.day{
+position:absolute;
+top:20px;
+right:22px;
+font-size:14px;
+background:#0005;
+padding:8px 11px;
+border-radius:10px;
+}
+
+.sun{
+position:absolute;
+right:50px;
+top:65px;
+font-size:72px;
+}
+
+.big{
+position:absolute;
+inset:0;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+z-index:4;
+}
+
+.icon{
+font-size:88px;
+}
+
+.temp{
+font-size:65px;
+font-weight:bold;
+}
+
+.condition{
+font-size:23px;
+margin-top:2px;
+}
+
+.clock{
+font-size:18px;
+margin-top:10px;
+}
+
+.cloud{
+position:absolute;
+font-size:65px;
+white-space:nowrap;
+opacity:.75;
+animation:move 40s linear infinite;
+}
+
+.cloudA{
+top:80px;
+left:-150px;
+}
+
+.cloudB{
+top:180px;
+left:-350px;
+animation-duration:55s;
+}
+
+.cloudC{
+top:285px;
+left:-250px;
+animation-duration:48s;
+}
+
+@keyframes move{
+from{transform:translateX(-100px)}
+to{transform:translateX(1200px)}
+}
+
+#effects{
+position:absolute;
+inset:0;
+z-index:6;
+pointer-events:none;
+}
+
+.rain{
+position:absolute;
+width:2px;
+height:25px;
+background:#fff;
+animation:fall .55s linear infinite;
+}
+
+@keyframes fall{
+from{transform:translateY(-40px)}
+to{transform:translateY(500px)}
+}
+
+.snow{
+position:absolute;
+animation:snowfall 4s linear infinite;
+font-size:17px;
+}
+
+@keyframes snowfall{
+from{transform:translateY(-30px)}
+to{transform:translateY(500px)}
+}
+
+.flash{
+position:absolute;
+inset:0;
+background:white;
+opacity:0;
+z-index:20;
+pointer-events:none;
+}
+
+.flashOn{
+animation:flash .35s;
+}
+
+@keyframes flash{
+0%{opacity:0}
+20%{opacity:.9}
+45%{opacity:0}
+70%{opacity:.7}
+100%{opacity:0}
+}
+
+.panel{
+background:#101f31;
+border:1px solid #23384f;
+border-radius:20px;
+padding:18px;
+margin-top:14px;
+}
+
+.title{
+font-size:19px;
+font-weight:bold;
+margin-bottom:16px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+.control{
+margin-bottom:4px;
+}
+
+.controlHead{
+display:flex;
+justify-content:space-between;
+margin-bottom:8px;
+}
+
+.controlHead span:last-child{
+color:#5dd3ff;
+font-weight:bold;
+}
+
+input[type=range]{
+width:100%;
+accent-color:#29b6f6;
+}
+
+.buttons{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:9px;
+}
+
+button{
+padding:13px 8px;
+border:0;
+border-radius:12px;
+background:#213852;
+color:#fff;
+font-size:15px;
+}
+
+button:active{
+transform:scale(.97);
+}
+
+.primary{
+background:#087db5;
+}
+
+.cards{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:9px;
+}
+
+.card{
+background:#172a40;
+border-radius:14px;
+padding:14px;
+}
+
+.card .name{
+font-size:12px;
+color:#8fa5bb;
+}
+
+.card .number{
+font-size:22px;
+font-weight:bold;
+margin-top:5px;
+}
+
+.card .small{
+font-size:11px;
+color:#71879d;
+margin-top:4px;
+}
+
+.status{
+text-align:center;
+color:#70e1b1;
+margin-top:14px;
+}
+
+@media(max-width:650px){
+
+.grid{
+grid-template-columns:1fr;
+}
+
+.cards{
+grid-template-columns:1fr 1fr;
+}
+
+.display{
+height:400px;
+}
+
+}
+
+@media(max-width:400px){
+
+.cards{
+grid-template-columns:1fr;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="top">
+<h1>🌍 Weather Lab</h1>
+<p>Interactive atmospheric simulation</p>
+</div>
+
+<div class="app">
+
+<!-- WEATHER DISPLAY -->
+
+<div class="display" id="display">
+
+<div class="day" id="day">DAY • 12:00</div>
+
+<div class="sun" id="sun">☀️</div>
+
+<div class="cloud cloudA">☁️</div>
+<div class="cloud cloudB">☁️</div>
+<div class="cloud cloudC">☁️</div>
+
+<div class="big">
+
+<div class="icon" id="icon">☀️</div>
+
+<div class="temp" id="bigTemp">20°C</div>
+
+<div class="condition" id="condition">
+Clear
+</div>
+
+<div class="clock" id="clock">
+12:00
+</div>
+
+</div>
+
+<div id="effects"></div>
+
+<div class="flash" id="flash"></div>
+
+</div>
+
+
+<!-- WEATHER CONTROLS -->
+
+<div class="panel">
+
+<div class="title">
+🎛️ Control The Atmosphere
+</div>
+
+<div class="grid">
+
+<div class="control">
+
+<div class="controlHead">
+<span>🌡 Temperature</span>
+<span id="tOut">20°C</span>
+</div>
+
+<input id="t" type="range"
+min="-30" max="45" value="20">
+
+</div>
+
+
+<div class="control">
+
+<div class="controlHead">
+<span>💧 Humidity</span>
+<span id="hOut">50%</span>
+</div>
+
+<input id="h" type="range"
+min="0" max="100" value="50">
+
+</div>
+
+
+<div class="control">
+
+<div class="controlHead">
+<span>☁ Cloud Cover</span>
+<span id="cOut">20%</span>
+</div>
+
+<input id="c" type="range"
+min="0" max="100" value="20">
+
+</div>
+
+
+<div class="control">
+
+<div class="controlHead">
+<span>🌧 Precipitation</span>
+<span id="pOut">0%</span>
+</div>
+
+<input id="p" type="range"
+min="0" max="100" value="0">
+
+</div>
+
+
+<div class="control">
+
+<div class="controlHead">
+<span>💨 Wind</span>
+<span id="wOut">10 km/h</span>
+</div>
+
+<input id="w" type="range"
+min="0" max="160" value="10">
+
+</div>
+
+
+<div class="control">
+
+<div class="controlHead">
+<span>🧭 Wind Direction</span>
+<span id="dOut">N</span>
+</div>
+
+<input id="d" type="range"
+min="0" max="359" value="0">
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- PRESETS -->
+
+<div class="panel">
+
+<div class="title">
+⚡ Instant Weather
+</div>
+
+<div class="buttons">
+
+<button onclick="preset('sun')">
+☀️ Sunny
+</button>
+
+<button onclick="preset('cloud')">
+☁️ Cloudy
+</button>
+
+<button onclick="preset('rain')">
+🌧️ Rain
+</button>
+
+<button onclick="preset('storm')">
+⛈️ Thunderstorm
+</button>
+
+<button onclick="preset('snow')">
+❄️ Snow
+</button>
+
+<button onclick="preset('blizzard')">
+🌨️ Blizzard
+</button>
+
+<button onclick="preset('fog')">
+🌫️ Fog
+</button>
+
+<button onclick="preset('heat')">
+🔥 Heatwave
+</button>
+
+</div>
+
+</div>
+
+
+<!-- SIMULATION -->
+
+<div class="panel">
+
+<div class="title">
+🕐 Time Simulation
+</div>
+
+<div class="buttons">
+
+<button class="primary"
+onclick="start()">
+▶ Start
+</button>
+
+<button onclick="pause()">
+⏸ Pause
+</button>
+
+<button onclick="reset()">
+🔄 Reset
+</button>
+
+<button onclick="hourJump()">
+⏩ +1 Hour
+</button>
+
+</div>
+
+<div class="status" id="status">
+Simulation paused
+</div>
+
+</div>
+
+
+<!-- DATA -->
+
+<div class="panel">
+
+<div class="title">
+📡 Atmospheric Readings
+</div>
+
+<div class="cards">
+
+<div class="card">
+<div class="name">TEMPERATURE</div>
+<div class="number" id="dt">20°C</div>
+<div class="small" id="feels">
+Feels like 20°C
+</div>
+</div>
+
+<div class="card">
+<div class="name">HUMIDITY</div>
+<div class="number" id="dh">50%</div>
+<div class="small">Relative humidity</div>
+</div>
+
+<div class="card">
+<div class="name">WIND</div>
+<div class="number" id="dw">10</div>
+<div class="small" id="dir">km/h • N</div>
+</div>
+
+<div class="card">
+<div class="name">PRECIPITATION</div>
+<div class="number" id="dp">0%</div>
+<div class="small" id="ptype">None</div>
+</div>
+
+<div class="card">
+<div class="name">CLOUD COVER</div>
+<div class="number" id="dc">20%</div>
+<div class="small">Sky coverage</div>
+</div>
+
+<div class="card">
+<div class="name">PRESSURE</div>
+<div class="number" id="dpressure">1013</div>
+<div class="small">hPa</div>
+</div>
+
+<div class="card">
+<div class="name">DEW POINT</div>
+<div class="number" id="dew">10°C</div>
+<div class="small">Approx.</div>
+</div>
+
+<div class="card">
+<div class="name">VISIBILITY</div>
+<div class="number" id="vis">20 km</div>
+<div class="small">Horizontal</div>
+</div>
+
+<div class="card">
+<div class="name">UV INDEX</div>
+<div class="number" id="uv">5</div>
+<div class="small">Simulated</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const T=document.getElementById("t");
+const H=document.getElementById("h");
+const C=document.getElementById("c");
+const P=document.getElementById("p");
+const W=document.getElementById("w");
+const D=document.getElementById("d");
+
+let minutes=720;
+let timer=null;
+
+
+/* DIRECTION */
+
+function dirName(x){
+
+const a=[
+"N","NNE","NE","ENE",
+"E","ESE","SE","SSE",
+"S","SSW","SW","WSW",
+"W","WNW","NW","NNW"
+];
+
+return a[Math.round(x/22.5)%16];
+
+}
+
+
+/* MAIN ENGINE */
+
+function update(){
+
+let t=+T.value;
+let h=+H.value;
+let c=+C.value;
+let p=+P.value;
+let w=+W.value;
+let d=+D.value;
+
+
+/* CONDITION */
+
+let condition="Clear";
+let icon="☀️";
+let precipitation="None";
+
+
+if(t<=0 && p>15){
+
+condition="Snow";
+icon="❄️";
+precipitation="Snow";
+
+}
+
+if(t<=-5 && p>65 && w>60){
+
+condition="Blizzard";
+icon="🌨️";
+precipitation="Heavy snow";
+
+}
+
+if(p>75 && w>55 && c>75 && t>5){
+
+condition="Thunderstorm";
+icon="⛈️";
+precipitation="Heavy rain";
+
+}
+
+else if(p>60){
+
+condition="Heavy Rain";
+icon="🌧️";
+precipitation="Heavy rain";
+
+}
+
+else if(p>15){
+
+condition="Rain";
+icon="🌦️";
+precipitation="Rain";
+
+}
+
+else if(h>90 && c>70){
+
+condition="Fog";
+icon="🌫️";
+
+}
+
+else if(c>75){
+
+condition="Overcast";
+icon="☁️";
+
+}
+
+else if(c>35){
+
+condition="Partly Cloudy";
+icon="🌤️";
+
+}
+
+if(t>=35 && p<20){
+
+condition="Heatwave";
+icon="🔥";
+
+}
+
+if(t<=-15 && p<20){
+
+condition="Extreme Cold";
+icon="🥶";
+
+}
+
+
+/* FEELS LIKE */
+
+let feels=t;
+
+if(t>=20 && h>=40){
+
+feels=t+(h-40)*0.1;
+
+}
+
+if(t<=10 && w>10){
+
+feels=t-w*0.07;
+
+}
+
+
+/* DEW POINT */
+
+let dew=t-(100-h)/5;
+
+
+/* UV */
+
+let hour=minutes/60;
+
+let uv=0;
+
+if(hour>=7 && hour<=18){
+
+uv=Math.round(
+Math.max(0,8*(1-c/130)*(1-Math.abs(12-hour)/8))
+);
+
+}
+
+
+/* PRESSURE */
+
+let pressure=Math.round(
+1013-(p*.18)+(w*.03)
+);
+
+
+/* VISIBILITY */
+
+let visibility=20;
+
+if(h>85)visibility-=8;
+
+if(p>30)visibility-=p*.08;
+
+if(condition==="Fog")visibility=.5;
+
+visibility=Math.max(.2,visibility);
+
+
+/* OUTPUT */
+
+document.getElementById("tOut").textContent=t+"°C";
+document.getElementById("hOut").textContent=h+"%";
+document.getElementById("cOut").textContent=c+"%";
+document.getElementById("pOut").textContent=p+"%";
+document.getElementById("wOut").textContent=w+" km/h";
+document.getElementById("dOut").textContent=dirName(d);
+
+document.getElementById("bigTemp").textContent=t+"°C";
+document.getElementById("icon").textContent=icon;
+document.getElementById("condition").textContent=condition;
+
+document.getElementById("dt").textContent=t+"°C";
+document.getElementById("dh").textContent=h+"%";
+document.getElementById("dw").textContent=w;
+document.getElementById("dir").textContent=
+"km/h • "+dirName(d);
+
+document.getElementById("dp").textContent=p+"%";
+document.getElementById("ptype").textContent=precipitation;
+
+document.getElementById("dc").textContent=c+"%";
+
+document.getElementById("dpressure").textContent=
+pressure;
+
+document.getElementById("dew").textContent=
+Math.round(dew)+"°C";
+
+document.getElementById("vis").textContent=
+visibility.toFixed(1)+" km";
+
+document.getElementById("uv").textContent=uv;
+
+document.getElementById("feels").textContent=
+"Feels like "+Math.round(feels)+"°C";
+
+
+updateSky(c);
+
+effects(t,p,w,condition);
+
+}
+
+
+/* SKY */
+
+function updateSky(clouds){
+
+let hour=minutes/60;
+
+const display=document.getElementById("display");
+const sun=document.getElementById("sun");
+
+if(hour<5 || hour>=21){
+
+display.style.background=
+"linear-gradient(#030712,#172554)";
+
+sun.textContent="🌙";
+
+}
+
+else if(hour<8){
+
+display.style.background=
+"linear-gradient(#f97316,#fcd34d)";
+
+sun.textContent="☀️";
+
+}
+
+else if(hour>=18){
+
+display.style.background=
+"linear-gradient(#f97316,#fb7185)";
+
+sun.textContent="🌇";
+
+}
+
+else{
+
+if(clouds>70){
+
+display.style.background=
+"linear-gradient(#64748b,#94a3b8)";
+
+}else{
+
+display.style.background=
+"linear-gradient(#1976b9,#9edcf8)";
+
+}
+
+sun.textContent="☀️";
+
+}
+
+
+let h=Math.floor(minutes/60);
+
+let m=minutes%60;
+
+document.getElementById("clock").textContent=
+String(h).padStart(2,"0")+":"+
+String(m).padStart(2,"0");
+
+document.getElementById("day").textContent=
+(hour>=5 && hour<21?"DAY":"NIGHT")
++" • "+
+String(h).padStart(2,"0")+":"+
+String(m).padStart(2,"0");
+
+}
+
+
+/* EFFECTS */
+
+function effects(t,p,w,condition){
+
+const box=document.getElementById("effects");
+
+box.innerHTML="";
+
+
+if(t<=0 && p>15){
+
+for(let i=0;i<70;i++){
+
+let x=document.createElement("div");
+
+x.className="snow";
+
+x.textContent="❄️";
+
+x.style.left=Math.random()*100+"%";
+
+x.style.animationDuration=
+2+Math.random()*4+"s";
+
+x.style.animationDelay=
+Math.random()*4+"s";
+
+box.appendChild(x);
+
+}
+
+}
+
+else if(p>10){
+
+for(let i=0;i<Math.min(100,p);i++){
+
+let x=document.createElement("div");
+
+x.className="rain";
+
+x.style.left=Math.random()*100+"%";
+
+x.style.animationDuration=
+(.3+Math.random()*.5)+"s";
+
+x.style.animationDelay=
+Math.random()+"s";
+
+box.appendChild(x);
+
+}
+
+}
+
+
+if(condition==="Thunderstorm" && Math.random()<.03){
+
+let flash=document.getElementById("flash");
+
+flash.classList.remove("flashOn");
+
+void flash.offsetWidth;
+
+flash.classList.add("flashOn");
+
+}
+
+}
+
+
+/* PRESETS */
+
+function preset(x){
+
+if(x==="sun"){
+T.value=24;H.value=40;C.value=5;P.value=0;W.value=8;
+}
+
+if(x==="cloud"){
+T.value=19;H.value=55;C.value=85;P.value=5;W.value=12;
+}
+
+if(x==="rain"){
+T.value=14;H.value=90;C.value=95;P.value=70;W.value=25;
+}
+
+if(x==="storm"){
+T.value=21;H.value=92;C.value=100;P.value=95;W.value=90;
+}
+
+if(x==="snow"){
+T.value=-3;H.value=88;C.value=95;P.value=65;W.value=15;
+}
+
+if(x==="blizzard"){
+T.value=-12;H.value=94;C.value=100;P.value=95;W.value=120;
+}
+
+if(x==="fog"){
+T.value=8;H.value=98;C.value=90;P.value=5;W.value=3;
+}
+
+if(x==="heat"){
+T.value=40;H.value=20;C.value=3;P.value=0;W.value=10;
+}
+
+update();
+
+}
+
+
+/* CLOCK */
+
+function tick(){
+
+minutes+=5;
+
+if(minutes>=1440)minutes=0;
+
+update();
+
+}
+
+
+/* START */
+
+function start(){
+
+if(timer)return;
+
+document.getElementById("status").textContent=
+"Simulation running ▶";
+
+timer=setInterval(tick,1000);
+
+}
+
+
+/* PAUSE */
+
+function pause(){
+
+clearInterval(timer);
+
+timer=null;
+
+document.getElementById("status").textContent=
+"Simulation paused";
+
+}
+
+
+/* +1 HOUR */
+
+function hourJump(){
+
+minutes+=60;
+
+if(minutes>=1440)minutes-=1440;
+
+update();
+
+}
+
+
+/* RESET */
+
+function reset(){
+
+pause();
+
+minutes=720;
+
+T.value=20;
+H.value=50;
+C.value=20;
+P.value=0;
+W.value=10;
+D.value=0;
+
+update();
+
+}
+
+
+/* INPUTS */
+
+[T,H,C,P,W,D].forEach(x=>{
+x.addEventListener("input",update);
+});
+
+
+/* INITIALIZE */
+
+update();
+
+</script>
+
+</body>
+  </html>
