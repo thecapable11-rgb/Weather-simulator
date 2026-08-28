@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<title>Atmos — Weather Simulator</title>
+
+<style>
+*{box-sizing:border-box}
+
+:root{
+--bg:#07111f;
+--panel:rgba(17,30,49,.88);
+--panel2:rgba(25,42,67,.8);
+--text:#f8fafc;
+--muted:#9fb0c7;
+--accent:#38bdf8;
+}
+
+body{
+margin:0;
+background:
+radial-gradient(circle at top,#173557 0,#07111f 45%,#030811 100%);
+color:var(--text);
+font-family:Inter,Arial,sans-serif;
+min-height:100vh;
+}
+
+button,input{font:inherit}
+
+header{
+padding:18px 16px 10px;
+text-align:center;
+}
+
+.logo{
+font-size:28px;
+font-weight:800;
+letter-spacing:-1px;
+}
+
+.subtitle{
+color:var(--muted);
+font-size:13px;
+margin-top:5px;
+}
+
+.app{
+width:min(1100px,94%);
+margin:auto;
+padding-bottom:40px;
+}
+
+/* SKY */
+
+.sky{
+height:440px;
+border-radius:28px;
+position:relative;
+overflow:hidden;
+background:linear-gradient(#258bd1,#9bd8f7);
+box-shadow:0 20px 60px rgba(0,0,0,.3);
+transition:background 1s;
+}
+
+.sky:after{
+content:"";
+position:absolute;
+inset:0;
+background:
+linear-gradient(transparent 55%,rgba(0,0,0,.18));
+pointer-events:none;
+}
+
+.sun{
+position:absolute;
+width:82px;
+height:82px;
+border-radius:50%;
+background:#ffe27a;
+box-shadow:0 0 45px #ffe27a;
+top:45px;
+right:65px;
+transition:all 1s;
+}
+
+.moon{
+position:absolute;
+font-size:70px;
+top:40px;
+right:65px;
+display:none;
+filter:drop-shadow(0 0 15px white);
+}
+
+.cloud{
+position:absolute;
+font-size:70px;
+opacity:.8;
+white-space:nowrap;
+animation:cloudMove linear infinite;
+}
+
+.c1{
+top:65px;
+left:-180px;
+animation-duration:38s;
+}
+
+.c2{
+top:155px;
+left:-300px;
+font-size:85px;
+animation-duration:55s;
+animation-delay:8s;
+}
+
+.c3{
+top:245px;
+left:-250px;
+font-size:55px;
+animation-duration:46s;
+animation-delay:15s;
+}
+
+@keyframes cloudMove{
+from{transform:translateX(-180px)}
+to{transform:translateX(1250px)}
+}
+
+.skyCenter{
+position:absolute;
+inset:0;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+padding-top:35px;
+z-index:5;
+text-shadow:0 2px 10px rgba(0,0,0,.25);
+}
+
+.mainIcon{
+font-size:88px;
+line-height:1;
+}
+
+.mainTemp{
+font-size:68px;
+font-weight:800;
+margin-top:8px;
+letter-spacing:-3px;
+}
+
+.condition{
+font-size:24px;
+font-weight:600;
+}
+
+.simTime{
+font-size:17px;
+margin-top:8px;
+opacity:.9;
+}
+
+.location{
+position:absolute;
+top:18px;
+left:20px;
+z-index:8;
+font-weight:700;
+background:rgba(0,0,0,.2);
+padding:8px 12px;
+border-radius:12px;
+backdrop-filter:blur(8px);
+}
+
+.season{
+position:absolute;
+top:18px;
+right:20px;
+z-index:8;
+background:rgba(0,0,0,.2);
+padding:8px 12px;
+border-radius:12px;
+font-size:13px;
+}
+
+/* EFFECTS */
+
+#particles{
+position:absolute;
+inset:0;
+z-index:6;
+pointer-events:none;
+overflow:hidden;
+}
+
+.rainDrop{
+position:absolute;
+width:2px;
+height:24px;
+background:rgba(220,240,255,.8);
+animation:rainFall linear infinite;
+}
+
+@keyframes rainFall{
+from{transform:translateY(-40px)}
+to{transform:translateY(500px)}
+}
+
+.snowFlake{
+position:absolute;
+font-size:18px;
+animation:snowFall linear infinite;
+}
+
+@keyframes snowFall{
+from{transform:translateY(-30px) rotate(0)}
+to{transform:translateY(500px) rotate(360deg)}
+}
+
+.fog{
+position:absolute;
+inset:0;
+z-index:4;
+background:rgba(220,230,235,.25);
+backdrop-filter:blur(2px);
+display:none;
+}
+
+.lightning{
+position:absolute;
+inset:0;
+z-index:20;
+background:white;
+opacity:0;
+pointer-events:none;
+}
+
+.flash{
+animation:flash .35s;
+}
+
+@keyframes flash{
+0%{opacity:0}
+15%{opacity:.9}
+30%{opacity:0}
+55%{opacity:.75}
+100%{opacity:0}
+}
+
+/* PANELS */
+
+.panel{
+margin-top:18px;
+background:var(--panel);
+border:1px solid rgba(255,255,255,.07);
+border-radius:22px;
+padding:20px;
+box-shadow:0 12px 35px rgba(0,0,0,.2);
+backdrop-filter:blur(15px);
+}
+
+.panelTitle{
+font-size:19px;
+font-weight:750;
+margin-bottom:18px;
+}
+
+.controlsGrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:18px 25px;
+}
+
+.control label{
+display:flex;
+justify-content:space-between;
+font-size:14px;
+margin-bottom:8px;
+}
+
+.value{
+font-weight:700;
+color:#7dd3fc;
+}
+
+input[type=range]{
+width:100%;
+accent-color:#38bdf8;
+}
+
+select{
+width:100%;
+background:#263b59;
+color:white;
+border:1px solid rgba(255,255,255,.1);
+border-radius:10px;
+padding:11px;
+}
+
+.buttons{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+}
+
+button{
+border:0;
+border-radius:12px;
+padding:11px 15px;
+background:#263b59;
+color:white;
+cursor:pointer;
+transition:.15s;
+}
+
+button:hover{
+background:#345173;
+}
+
+button:active{
+transform:scale(.96);
+}
+
+.primary{
+background:#0284c7;
+}
+
+.primary:hover{
+background:#0369a1;
+}
+
+.danger{
+background:#7f1d1d;
+}
+
+/* DATA */
+
+.dataGrid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+}
+
+.card{
+background:var(--panel2);
+border-radius:15px;
+padding:15px;
+}
+
+.cardIcon{
+font-size:21px;
+}
+
+.cardName{
+font-size:12px;
+color:var(--muted);
+margin-top:7px;
+}
+
+.cardValue{
+font-size:21px;
+font-weight:750;
+margin-top:3px;
+}
+
+.cardSmall{
+font-size:11px;
+color:var(--muted);
+margin-top:4px;
+}
+
+/* CHART */
+
+.chartWrap{
+height:190px;
+position:relative;
+}
+
+canvas{
+width:100%;
+height:100%;
+}
+
+/* STATUS */
+
+.status{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.statusText{
+color:#a7f3d0;
+font-weight:650;
+}
+
+.speedButtons{
+display:flex;
+gap:6px;
+}
+
+.speedButtons button{
+padding:7px 11px;
+font-size:12px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:700px){
+
+.controlsGrid{
+grid-template-columns:1fr;
+}
+
+.dataGrid{
+grid-template-columns:1fr 1fr;
+}
+
+.sky{
+height:390px;
+}
+
+.mainTemp{
+font-size:58px;
+}
+
+.mainIcon{
+font-size:72px;
+}
+
+.sun{
+right:30px;
+width:65px;
+height:65px;
+}
+
+.moon{
+right:30px;
+font-size:55px;
+}
+
+}
+
+@media(max-width:400px){
+
+.dataGrid{
+grid-template-columns:1fr;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="logo">🌦️ ATMOS</div>
+<div class="subtitle">Advanced Weather Simulation Engine</div>
+</header>
+
+<div class="app">
+
+<!-- SKY -->
+
+<div class="sky" id="sky">
+
+<div class="location">📍 Simulation World</div>
+<div class="season" id="season">Summer</div>
+
+<div class="sun" id="sun"></div>
+<div class="moon" id="moon">🌙</div>
+
+<div class="cloud c1">☁️</div>
+<div class="cloud c2">☁️</div>
+<div class="cloud c3">☁️</div>
+
+<div class="skyCenter">
+
+<div class="mainIcon" id="mainIcon">☀️</div>
+
+<div class="mainTemp" id="mainTemp">20°C</div>
+
+<div class="condition" id="condition">Clear Sky</div>
+
+<div class="simTime" id="simTime">12:00</div>
+
+</div>
+
+<div id="particles"></div>
+<div class="fog" id="fog"></div>
+<div class="lightning" id="lightning"></div>
+
+</div>
+
+
+<!-- MAIN CONTROLS -->
+
+<div class="panel">
+
+<div class="panelTitle">🎛️ Atmospheric Controls</div>
+
+<div class="controlsGrid">
+
+<div class="control">
+<label>
+<span>🌡️ Temperature</span>
+<span class="value" id="tempValue">20°C</span>
+</label>
+
+<input id="temp" type="range" min="-40" max="50" value="20">
+</div>
+
+
+<div class="control">
+<label>
+<span>💧 Humidity</span>
+<span class="value" id="humidityValue">50%</span>
+</label>
+
+<input id="humidity" type="range" min="0" max="100" value="50">
+</div>
+
+
+<div class="control">
+<label>
+<span>☁️ Cloud Cover</span>
+<span class="value" id="cloudValue">20%</span>
+</label>
+
+<input id="clouds" type="range" min="0" max="100" value="20">
+</div>
+
+
+<div class="control">
+<label>
+<span>🌧️ Precipitation</span>
+<span class="value" id="precipValue">0%</span>
+</label>
+
+<input id="precip" type="range" min="0" max="100" value="0">
+</div>
+
+
+<div class="control">
+<label>
+<span>💨 Wind Speed</span>
+<span class="value" id="windValue">10 km/h</span>
+</label>
+
+<input id="wind" type="range" min="0" max="180" value="10">
+</div>
+
+
+<div class="control">
+<label>
+<span>🧭 Wind Direction</span>
+<span class="value" id="directionValue">N</span>
+</label>
+
+<input id="direction" type="range" min="0" max="359" value="0">
+</div>
+
+
+<div class="control">
+<label>
+<span>🧭 Air Pressure</span>
+<span class="value" id="pressureValue">1013 hPa</span>
+</label>
+
+<input id="pressure" type="range" min="970" max="1045" value="1013">
+</div>
+
+
+<div class="control">
+<label>
+<span>🌫️ Visibility</span>
+<span class="value" id="visibilityValue">20 km</span>
+</label>
+
+<input id="visibility" type="range" min="0.2" max="30" step="0.1" value="20">
+</div>
+
+</div>
+
+</div>
+
+
+<!-- PRESETS -->
+
+<div class="panel">
+
+<div class="panelTitle">🌦️ Weather Presets</div>
+
+<div class="buttons">
+
+<button onclick="preset('clear')">☀️ Clear</button>
+
+<button onclick="preset('partly')">🌤️ Partly Cloudy</button>
+
+<button onclick="preset('rain')">🌧️ Rain</button>
+
+<button onclick="preset('storm')">⛈️ Thunderstorm</button>
+
+<button onclick="preset('snow')">❄️ Snow</button>
+
+<button onclick="preset('blizzard')">🌨️ Blizzard</button>
+
+<button onclick="preset('fog')">🌫️ Fog</button>
+
+<button onclick="preset('heat')">🔥 Heatwave</button>
+
+<button onclick="preset('wind')">💨 Windstorm</button>
+
+<button onclick="preset('cold')">🥶 Arctic Cold</button>
+
+</div>
+
+</div>
+
+
+<!-- SIMULATION -->
+
+<div class="panel">
+
+<div class="panelTitle">🕐 Simulation Time</div>
+
+<div class="buttons">
+
+<button class="primary" onclick="startSimulation()">▶️ Start</button>
+
+<button onclick="pauseSimulation()">⏸️ Pause</button>
+
+<button onclick="resetSimulation()">🔄 Reset</button>
+
+</div>
+
+<br>
+
+<div class="status">
+
+<div>
+<span class="statusText" id="status">Simulation Paused</span>
+</div>
+
+<div class="speedButtons">
+
+<button onclick="setSpeed(1)">1×</button>
+<button onclick="setSpeed(5)">5×</button>
+<button onclick="setSpeed(15)">15×</button>
+<button onclick="setSpeed(60)">60×</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- DATA -->
+
+<div class="panel">
+
+<div class="panelTitle">📊 Live Atmospheric Data</div>
+
+<div class="dataGrid">
+
+<div class="card">
+<div class="cardIcon">🌡️</div>
+<div class="cardName">Temperature</div>
+<div class="cardValue" id="dataTemp">20°C</div>
+<div class="cardSmall" id="feels">Feels like 20°C</div>
+</div>
+
+
+<div class="card">
+<div class="cardIcon">💧</div>
+<div class="cardName">Humidity</div>
+<div class="cardValue" id="dataHumidity">50%</div>
+<div class="cardSmall">Relative humidity</div>
+</div>
+
+
+<div class="card">
+<div class="cardIcon">💨</div>
+<div class="cardName">Wind</div>
+<div class="cardValue" id="dataWind">10 km/h</div>
+<div class="cardSmall" id="windDir">From N</div>
+</div>
+
+
+<div class="card">
+<div class="cardIcon">🧭</div>
+<div class="cardName">Pressure</div>
+<div class="cardValue" id="dataPressure">1013</div>
+<div class="cardSmall">hPa</div>
+</div>
+
+
+<div class="card">
+<div class="cardIcon">🌧️</div>
+<div class="cardName">Precipitation</div>
+<div class="cardValue" id="dataPrecip">0%</div>
+<div class="cardSmall" id="precipType">None</div>
+</div>
+
+
+<div class="card">
+<div class="cardIcon">☁️</div>
+<div class="cardName">Cloud Cover</div>
+<div class="cardValue" id="dataCloud">20%</div>
+<div class="cardSmall">Sky coverage</div>
+</div>
+
+
+<div class="card">
+<div class="cardIcon">👁️</div>
+<div class="cardName">Visibility</div>
+<div class="cardValue" id="dataVisibility">20 km</div>
+<div class="cardSmall">Horizontal visibility</div>
+</div>
+
+
+<div class="card">
+<div class="cardIcon">🧊</div>
+<div class="cardName">Dew Point</div>
+<div class="cardValue" id="dataDew">10°C</div>
+<div class="cardSmall">Approximate</div>
+</div>
+
+</div>
+
+</div>
+
+
+<!-- GRAPH -->
+
+<div class="panel">
+
+<div class="panelTitle">📈 Temperature History</div>
+
+<div class="chartWrap">
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* ELEMENTS */
+
+const temp=document.getElementById("temp");
+const humidity=document.getElementById("humidity");
+const clouds=document.getElementById("clouds");
+const precip=document.getElementById("precip");
+const wind=document.getElementById("wind");
+const direction=document.getElementById("direction");
+const pressure=document.getElementById("pressure");
+const visibility=document.getElementById("visibility");
+
+let simulationMinutes=720;
+let running=false;
+let timer=null;
+let speed=1;
+
+let history=[];
+
+
+/* DIRECTION */
+
+function directionName(deg){
+
+const dirs=[
+"N","NNE","NE","ENE",
+"E","ESE","SE","SSE",
+"S","SSW","SW","WSW",
+"W","WNW","NW","NNW"
+];
+
+return dirs[Math.round(deg/22.5)%16];
+
+}
+
+
+/* SEASON */
+
+function getSeason(hour){
+
+if(hour>=5 && hour<10)return "🌅 Morning";
+
+if(hour>=10 && hour<17)return "☀️ Day";
+
+if(hour>=17 && hour<21)return "🌇 Evening";
+
+return "🌙 Night";
+
+}
+
+
+/* WEATHER ENGINE */
+
+function calculateWeather(){
+
+const t=Number(temp.value);
+const h=Number(humidity.value);
+const c=Number(clouds.value);
+const p=Number(precip.value);
+const w=Number(wind.value);
+const pr=Number(pressure.value);
+const vis=Number(visibility.value);
+
+let condition="Clear Sky";
+let icon="☀️";
+let precipitationType="None";
+
+
+/* SNOW */
+
+if(t<=0 && p>15){
+
+condition="Snow";
+icon="❄️";
+precipitationType="Snow";
+
+}
+
+
+/* BLIZZARD */
+
+if(t<=-5 && p>55 && w>65){
+
+condition="Blizzard";
+icon="🌨️";
+precipitationType="Heavy Snow";
+
+}
+
+
+/* THUNDERSTORM */
+
+if(p>70 && c>70 && w>45 && t>5){
+
+condition="Thunderstorm";
+icon="⛈️";
+precipitationType="Heavy Rain";
+
+}
+
+
+/* HEAVY RAIN */
+
+else if(p>65){
+
+condition="Heavy Rain";
+icon="🌧️";
+precipitationType="Heavy Rain";
+
+}
+
+
+/* RAIN */
+
+else if(p>20){
+
+condition="Rain";
+icon="🌦️";
+precipitationType="Rain";
+
+}
+
+
+/* FOG */
+
+if(h>88 && vis<3){
+
+condition="Dense Fog";
+icon="🌫️";
+
+}
+
+
+/* OVERCAST */
+
+else if(c>80 && p<20){
+
+condition="Overcast";
+icon="☁️";
+
+}
+
+
+/* PARTLY CLOUDY */
+
+else if(c>35 && p<20){
+
+condition="Partly Cloudy";
+icon="🌤️";
+
+}
+
+
+/* HEAT */
+
+if(t>=35 && p<20){
+
+condition="Extreme Heat";
+icon="🔥";
+
+}
+
+
+/* COLD */
+
+if(t<=-15 && p<20){
+
+condition="Extreme Cold";
+icon="🥶";
+
+}
+
+
+/* FEELS LIKE */
+
+let feels=t;
+
+if(t>20 && h>60){
+
+feels=t+(h-50)*0.12;
+
+}
+
+if(t<10 && w>10){
+
+feels=t-w*0.08;
+
+}
+
+
+/* DEW POINT APPROXIMATION */
+
+let dew=t-((100-h)/5);
+
+
+/* UPDATE TEXT */
+
+document.getElementById("mainTemp").textContent=
+Math.round(t)+"°C";
+
+document.getElementById("mainIcon").textContent=icon;
+
+document.getElementById("condition").textContent=condition;
+
+document.getElementById("tempValue").textContent=t+"°C";
+
+document.getElementById("humidityValue").textContent=h+"%";
+
+document.getElementById("cloudValue").textContent=c+"%";
+
+document.getElementById("precipValue").textContent=p+"%";
+
+document.getElementById("windValue").textContent=w+" km/h";
+
+document.getElementById("directionValue").textContent=
+directionName(Number(direction.value));
+
+document.getElementById("pressureValue").textContent=
+pr+" hPa";
+
+document.getElementById("visibilityValue").textContent=
+vis+" km";
+
+
+document.getElementById("dataTemp").textContent=
+t+"°C";
+
+document.getElementById("dataHumidity").textContent=
+h+"%";
+
+document.getElementById("dataWind").textContent=
+w+" km/h";
+
+document.getElementById("dataPressure").textContent=
+pr;
+
+document.getElementById("dataPrecip").textContent=
+p+"%";
+
+document.getElementById("dataCloud").textContent=
+c+"%";
+
+document.getElementById("dataVisibility").textContent=
+vis+" km";
+
+document.getElementById("dataDew").textContent=
+Math.round(dew)+"°C";
+
+document.getElementById("feels").textContent=
+"Feels like "+Math.round(feels)+"°C";
+
+document.getElementById("windDir").textContent=
+"From "+directionName(Number(direction.value));
+
+document.getElementById("precipType").textContent=
+precipitationType;
+
+
+/* SKY */
+
+updateSky(t,c);
+
+
+/* EFFECTS */
+
+updateParticles(t,p,w,condition);
+
+
+/* LIGHTNING */
+
+if(condition==="Thunderstorm"){
+
+if(Math.random()<0.025){
+
+flashLightning();
+
+}
+
+}
+
+}
+
+
+/* SKY */
+
+function updateSky(t,c){
+
+const hour=simulationMinutes/60;
+
+const sky=document.getElementById("sky");
+
+const sun=document.getElementById("sun");
+
+const moon=document.getElementById("moon");
+
+
+if(hour>=20 || hour<5){
+
+sky.style.background=
+"linear-gradient(#020617,#0f1d3d)";
+
+sun.style.display="none";
+
+moon.style.display="block";
+
+}
+
+else if(hour<8){
+
+sky.style.background=
+"linear-gradient(#f97316,#fcd34d)";
+
+sun.style.display="block";
+
+moon.style.display="none";
+
+}
+
+else if(hour>=17){
+
+sky.style.background=
+"linear-gradient(#fb923c,#fca5a5)";
+
+sun.style.display="block";
+
+moon.style.display="none";
+
+}
+
+else{
+
+if(c>75){
+
+sky.style.background=
+"linear-gradient(#526477,#8998a8)";
+
+}
+
+else{
+
+sky.style.background=
+"linear-gradient(#2696dc,#a8def8)";
+
+}
+
+sun.style.display="block";
+
+moon.style.display="none";
+
+}
+
+document.getElementById("season").textContent=
+getSeason(hour);
+
+}
+
+
+/* PRECIPITATION EFFECTS */
+
+function updateParticles(t,p,w,condition){
+
+const container=document.getElementById("particles");
+
+container.innerHTML="";
+
+const amount=Math.min(110,Math.round(p*1.1));
+
+
+if(t<=0 && p>15){
+
+for(let i=0;i<amount;i++){
+
+const flake=document.createElement("div");
+
+flake.className="snowFlake";
+
+flake.textContent="❄";
+
+flake.style.left=Math.random()*100+"%";
+
+flake.style.animationDuration=
+(2+Math.random()*4)+"s";
+
+flake.style.animationDelay=
+Math.random()*4+"s";
+
+container.appendChild(flake);
+
+}
+
+}
+
+else if(p>10){
+
+for(let i=0;i<amount;i++){
+
+const drop=document.createElement("div");
+
+drop.className="rainDrop";
+
+drop.style.left=Math.random()*100+"%";
+
+drop.style.animationDuration=
+(.35+Math.random()*.5)+"s";
+
+drop.style.animationDelay=
+Math.random()+"s";
+
+if(w>50){
+
+drop.style.transform=
+"rotate("+Math.min(25,w/8)+"deg)";
+
+}
+
+container.appendChild(drop);
+
+}
+
+}
+
+
+/* FOG */
+
+const fog=document.getElementById("fog");
+
+if(
+Number(humidity.value)>88 &&
+Number(visibility.value)<3
+){
+
+fog.style.display="block";
+
+}
+
+else{
+
+fog.style.display="none";
+
+}
+
+}
+
+
+/* LIGHTNING */
+
+function flashLightning(){
+
+const light=document.getElementById("lightning");
+
+light.classList.remove("flash");
+
+void light.offsetWidth;
+
+light.classList.add("flash");
+
+}
+
+
+/* PRESETS */
+
+function preset(type){
+
+if(type==="clear"){
+
+temp.value=22;
+humidity.value=45;
+clouds.value=5;
+precip.value=0;
+wind.value=8;
+pressure.value=1018;
+visibility.value=30;
+
+}
+
+if(type==="partly"){
+
+temp.value=20;
+humidity.value=55;
+clouds.value=45;
+precip.value=5;
+wind.value=12;
+pressure.value=1014;
+visibility.value=25;
+
+}
+
+if(type==="rain"){
+
+temp.value=14;
+humidity.value=88;
+clouds.value=95;
+precip.value=70;
+wind.value=25;
+pressure.value=1005;
+visibility.value=8;
+
+}
+
+if(type==="storm"){
+
+temp.value=21;
+humidity.value=92;
+clouds.value=100;
+precip.value=95;
+wind.value=85;
+pressure.value=985;
+visibility.value=4;
+
+}
+
+if(type==="snow"){
+
+temp.value=-3;
+humidity.value=90;
+clouds.value=95;
+precip.value=60;
+wind.value=18;
+pressure.value=1008;
+visibility.value=6;
+
+}
+
+if(type==="blizzard"){
+
+temp.value=-12;
+humidity.value=92;
+clouds.value=100;
+precip.value=90;
+wind.value=110;
+pressure.value=975;
+visibility.value=0.5;
+
+}
+
+if(type==="fog"){
+
+temp.value=9;
+humidity.value=97;
+clouds.value=85;
+precip.value=5;
+wind.value=3;
+pressure.value=1010;
+visibility.value=0.6;
+
+}
+
+if(type==="heat"){
+
+temp.value=39;
+humidity.value=25;
+clouds.value=5;
+precip.value=0;
+wind.value=12;
+pressure.value=1015;
+visibility.value=25;
+
+}
+
+if(type==="wind"){
+
+temp.value=18;
+humidity.value=55;
+clouds.value=45;
+precip.value=15;
+wind.value=120;
+pressure.value=990;
+visibility.value=12;
+
+}
+
+if(type==="cold"){
+
+temp.value=-25;
+humidity.value=35;
+clouds.value=10;
+precip.value=0;
+wind.value=15;
+pressure.value=1030;
+visibility.value=30;
+
+}
+
+updateWeather();
+
+}
+
+
+/* SIMULATION */
+
+function startSimulation(){
+
+if(running)return;
+
+running=true;
+
+document.getElementById("status").textContent=
+"Simulation Running ▶️";
+
+timer=setInterval(()=>{
+
+simulationMinutes+=speed;
+
+if(simulationMinutes>=1440){
+
+simulationMinutes=0;
+
+}
+
+updateClock();
+
+},1000);
+
+}
+
+
+function pauseSimulation(){
+
+running=false;
+
+clearInterval(timer);
+
+timer=null;
+
+document.getElementById("status").textContent=
+"Simulation Paused ⏸️";
+
+}
+
+
+function setSpeed(value){
+
+speed=value;
+
+document.getElementById("status").textContent=
+running
+?"Running at "+speed+"× ▶️"
+:"Paused • "+speed+"×";
+
+}
+
+
+/* CLOCK */
+
+function updateClock(){
+
+const h=Math.floor(simulationMinutes/60);
+
+const m=simulationMinutes%60;
+
+document.getElementById("simTime").textContent=
+String(h).padStart(2,"0")+":"+
+String(m).padStart(2,"0");
+
+updateSky(
+Number(temp.value),
+Number(clouds.value)
+);
+
+updateHistory();
+
+}
+
+
+/* RESET */
+
+function resetSimulation(){
+
+pauseSimulation();
+
+simulationMinutes=720;
+
+temp.value=20;
+humidity.value=50;
+clouds.value=20;
+precip.value=0;
+wind.value=10;
+direction.value=0;
+pressure.value=1013;
+visibility.value=20;
+
+history=[];
+
+updateWeather();
+
+updateClock();
+
+}
+
+
+/* HISTORY */
+
+function updateHistory(){
+
+const value=Number(temp.value);
+
+history.push(value);
+
+if(history.length>40){
+
+history.shift();
+
+}
+
+drawChart();
+
+}
+
+
+/* CHART */
+
+function drawChart(){
+
+const canvas=document.getElementById("chart");
+
+const ctx=canvas.getContext("2d");
+
+const rect=canvas.getBoundingClientRect();
+
+const dpr=window.devicePixelRatio||1;
+
+canvas.width=rect.width*dpr;
+
+canvas.height=rect.height*dpr;
+
+ctx.scale(dpr,dpr);
+
+const width=rect.width;
+
+const height=rect.height;
+
+ctx.clearRect(0,0,width,height);
+
+
+/* GRID */
+
+ctx.strokeStyle="rgba(255,255,255,.08)";
+
+ctx.lineWidth=1;
+
+for(let i=1;i<5;i++){
+
+let y=i*height/5;
+
+ctx.beginPath();
+
+ctx.moveTo(0,y);
+
+ctx.lineTo(width,y);
+
+ctx.stroke();
+
+}
+
+
+/* LINE */
+
+if(history.length<2)return;
+
+const min=-40;
+const max=50;
+
+ctx.beginPath();
+
+history.forEach((v,i)=>{
+
+const x=i/(history.length-1)*width;
+
+const y=height-
+((v-min)/(max-min))*height;
+
+if(i===0){
+
+ctx.moveTo(x,y);
+
+}
+
+else{
+
+ctx.lineTo(x,y);
+
+}
+
+});
+
+ctx.strokeStyle="#38bdf8";
+
+ctx.lineWidth=3;
+
+ctx.stroke();
+
+
+/* CURRENT DOT */
+
+const v=history[history.length-1];
+
+const x=width;
+
+const y=height-
+((v-min)/(max-min))*height;
+
+ctx.beginPath();
+
+ctx.arc(x,y,5,0,Math.PI*2);
+
+ctx.fillStyle="#7dd3fc";
+
+ctx.fill();
+
+}
+
+
+/* INPUT EVENTS */
+
+[
+temp,
+humidity,
+clouds,
+precip,
+wind,
+direction,
+pressure,
+visibility
+].forEach(el=>{
+
+el.addEventListener("input",updateWeather);
+
+});
+
+
+window.addEventListener("resize",drawChart);
+
+
+/* START */
+
+updateWeather();
+
+updateClock();
+
+</script>
+
+</body>
+  </html>
