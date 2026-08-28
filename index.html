@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Simulator</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: white;
+}
+
+header {
+    text-align: center;
+    padding: 20px;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.app {
+    width: 94%;
+    max-width: 800px;
+    margin: auto;
+}
+
+#sky {
+    height: 360px;
+    border-radius: 25px;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    padding-top: 35px;
+    background: linear-gradient(#38bdf8, #bae6fd);
+    transition: background 1s;
+}
+
+#weatherEmoji {
+    font-size: 75px;
+    position: relative;
+    z-index: 5;
+}
+
+#temperature {
+    font-size: 58px;
+    font-weight: bold;
+    position: relative;
+    z-index: 5;
+}
+
+#condition {
+    font-size: 24px;
+    position: relative;
+    z-index: 5;
+}
+
+#clock {
+    font-size: 20px;
+    margin-top: 12px;
+    position: relative;
+    z-index: 5;
+}
+
+.cloud {
+    position: absolute;
+    font-size: 65px;
+    opacity: 0.8;
+    animation: moveCloud linear infinite;
+}
+
+.cloud1 {
+    top: 55px;
+    left: -120px;
+    animation-duration: 30s;
+}
+
+.cloud2 {
+    top: 140px;
+    left: -250px;
+    animation-duration: 45s;
+}
+
+@keyframes moveCloud {
+    from {
+        transform: translateX(-150px);
+    }
+
+    to {
+        transform: translateX(950px);
+    }
+}
+
+#precipitation {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.raindrop {
+    position: absolute;
+    width: 2px;
+    height: 22px;
+    background: white;
+    opacity: 0.7;
+    animation: rainFall 0.6s linear infinite;
+}
+
+@keyframes rainFall {
+    from {
+        transform: translateY(-30px);
+    }
+
+    to {
+        transform: translateY(400px);
+    }
+}
+
+.snowflake {
+    position: absolute;
+    font-size: 18px;
+    animation: snowFall 4s linear infinite;
+}
+
+@keyframes snowFall {
+    from {
+        transform: translateY(-30px);
+    }
+
+    to {
+        transform: translateY(400px);
+    }
+}
+
+.controls,
+.stats {
+    background: #1e293b;
+    margin-top: 20px;
+    padding: 22px;
+    border-radius: 22px;
+}
+
+.control {
+    margin-bottom: 25px;
+}
+
+.controlTitle {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 17px;
+}
+
+input[type="range"] {
+    width: 100%;
+}
+
+.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+button {
+    flex: 1;
+    min-width: 100px;
+    padding: 13px;
+    border: none;
+    border-radius: 12px;
+    background: #334155;
+    color: white;
+    font-size: 16px;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+.stats p {
+    font-size: 17px;
+}
+
+#status {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 17px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+🌦️ Weather Simulator
+</header>
+
+<div class="app">
+
+<div id="sky">
+
+    <div id="weatherEmoji">☀️</div>
+
+    <div id="temperature">20°C</div>
+
+    <div id="condition">Clear Sky</div>
+
+    <div id="clock">12:00</div>
+
+    <div class="cloud cloud1">☁️</div>
+    <div class="cloud cloud2">☁️</div>
+
+    <div id="precipitation"></div>
+
+</div>
+
+<div class="controls">
+
+    <div class="control">
+
+        <div class="controlTitle">
+            <span>🌡️ Temperature</span>
+            <span id="tempValue">20°C</span>
+        </div>
+
+        <input
+            id="temperatureSlider"
+            type="range"
+            min="-30"
+            max="45"
+            value="20"
+        >
+
+    </div>
+
+    <div class="control">
+
+        <div class="controlTitle">
+            <span>🌧️ Rain</span>
+            <span id="rainValue">0%</span>
+        </div>
+
+        <input
+            id="rainSlider"
+            type="range"
+            min="0"
+            max="100"
+            value="0"
+        >
+
+    </div>
+
+    <div class="control">
+
+        <div class="controlTitle">
+            <span>☁️ Clouds</span>
+            <span id="cloudValue">20%</span>
+        </div>
+
+        <input
+            id="cloudSlider"
+            type="range"
+            min="0"
+            max="100"
+            value="20"
+        >
+
+    </div>
+
+    <div class="control">
+
+        <div class="controlTitle">
+            <span>💨 Wind</span>
+            <span id="windValue">10 km/h</span>
+        </div>
+
+        <input
+            id="windSlider"
+            type="range"
+            min="0"
+            max="150"
+            value="10"
+        >
+
+    </div>
+
+    <div class="buttons">
+
+        <button onclick="setWeather('clear')">
+            ☀️ Clear
+        </button>
+
+        <button onclick="setWeather('rain')">
+            🌧️ Rain
+        </button>
+
+        <button onclick="setWeather('snow')">
+            ❄️ Snow
+        </button>
+
+        <button onclick="setWeather('storm')">
+            ⛈️ Storm
+        </button>
+
+        <button onclick="setWeather('cloudy')">
+            ☁️ Cloudy
+        </button>
+
+    </div>
+
+    <br>
+
+    <div class="buttons">
+
+        <button onclick="startSimulation()">
+            ▶️ Start
+        </button>
+
+        <button onclick="pauseSimulation()">
+            ⏸️ Pause
+        </button>
+
+        <button onclick="resetSimulation()">
+            🔄 Reset
+        </button>
+
+    </div>
+
+    <div id="status">
+        Simulation paused
+    </div>
+
+</div>
+
+<div class="stats">
+
+<h2>📊 Weather Data</h2>
+
+<p>🌡️ Temperature:
+<span id="statTemperature">20°C</span>
+</p>
+
+<p>🌧️ Rain:
+<span id="statRain">0%</span>
+</p>
+
+<p>☁️ Clouds:
+<span id="statClouds">20%</span>
+</p>
+
+<p>💨 Wind:
+<span id="statWind">10 km/h</span>
+</p>
+
+<p>🌦️ Condition:
+<span id="statCondition">Clear Sky</span>
+</p>
+
+</div>
+
+</div>
+
+<script>
+
+const temperatureSlider =
+document.getElementById("temperatureSlider");
+
+const rainSlider =
+document.getElementById("rainSlider");
+
+const cloudSlider =
+document.getElementById("cloudSlider");
+
+const windSlider =
+document.getElementById("windSlider");
+
+let simulationMinutes = 720;
+
+let simulationTimer = null;
+
+
+/* WEATHER ENGINE */
+
+function updateWeather() {
+
+    const temperature =
+    Number(temperatureSlider.value);
+
+    const rain =
+    Number(rainSlider.value);
+
+    const clouds =
+    Number(cloudSlider.value);
+
+    const wind =
+    Number(windSlider.value);
+
+
+    document.getElementById("tempValue").textContent =
+    temperature + "°C";
+
+    document.getElementById("rainValue").textContent =
+    rain + "%";
+
+    document.getElementById("cloudValue").textContent =
+    clouds + "%";
+
+    document.getElementById("windValue").textContent =
+    wind + " km/h";
+
+
+    document.getElementById("statTemperature").textContent =
+    temperature + "°C";
+
+    document.getElementById("statRain").textContent =
+    rain + "%";
+
+    document.getElementById("statClouds").textContent =
+    clouds + "%";
+
+    document.getElementById("statWind").textContent =
+    wind + " km/h";
+
+
+    document.getElementById("temperature").textContent =
+    temperature + "°C";
+
+
+    let emoji = "☀️";
+    let condition = "Clear Sky";
+
+
+    if (temperature <= 0 && rain > 20) {
+
+        emoji = "❄️";
+        condition = "Snow";
+
+    }
+
+    else if (rain > 75 && wind > 50) {
+
+        emoji = "⛈️";
+        condition = "Thunderstorm";
+
+    }
+
+    else if (rain > 50) {
+
+        emoji = "🌧️";
+        condition = "Heavy Rain";
+
+    }
+
+    else if (rain > 15) {
+
+        emoji = "🌦️";
+        condition = "Rain";
+
+    }
+
+    else if (clouds > 75) {
+
+        emoji = "☁️";
+        condition = "Overcast";
+
+    }
+
+    else if (clouds > 35) {
+
+        emoji = "🌤️";
+        condition = "Partly Cloudy";
+
+    }
+
+    else if (temperature >= 32) {
+
+        emoji = "🔥";
+        condition = "Very Hot";
+
+    }
+
+
+    document.getElementById("weatherEmoji").textContent =
+    emoji;
+
+    document.getElementById("condition").textContent =
+    condition;
+
+    document.getElementById("statCondition").textContent =
+    condition;
+
+
+    updateSky();
+
+    updatePrecipitation();
+
+}
+
+
+/* DAY / NIGHT */
+
+function updateSky() {
+
+    const hour =
+    Math.floor(simulationMinutes / 60);
+
+
+    if (hour >= 20 || hour < 6) {
+
+        document.getElementById("sky").style.background =
+        "linear-gradient(#020617,#172554)";
+
+    }
+
+    else if (hour < 9) {
+
+        document.getElementById("sky").style.background =
+        "linear-gradient(#fb923c,#fde68a)";
+
+    }
+
+    else {
+
+        document.getElementById("sky").style.background =
+        "linear-gradient(#38bdf8,#bae6fd)";
+
+    }
+
+}
+
+
+/* RAIN / SNOW */
+
+function updatePrecipitation() {
+
+    const rain =
+    Number(rainSlider.value);
+
+    const temperature =
+    Number(temperatureSlider.value);
+
+    const container =
+    document.getElementById("precipitation");
+
+
+    container.innerHTML = "";
+
+
+    if (temperature <= 0 && rain > 20) {
+
+        for (let i = 0; i < 35; i++) {
+
+            const snow =
+            document.createElement("div");
+
+            snow.className = "snowflake";
+
+            snow.textContent = "❄️";
+
+            snow.style.left =
+            Math.random() * 100 + "%";
+
+            snow.style.animationDelay =
+            Math.random() * 4 + "s";
+
+            container.appendChild(snow);
+
+        }
+
+    }
+
+    else if (rain > 10) {
+
+        for (let i = 0; i < 60; i++) {
+
+            const drop =
+            document.createElement("div");
+
+            drop.className = "raindrop";
+
+            drop.style.left =
+            Math.random() * 100 + "%";
+
+            drop.style.animationDelay =
+            Math.random() + "s";
+
+            container.appendChild(drop);
+
+        }
+
+    }
+
+}
+
+
+/* PRESET WEATHER */
+
+function setWeather(type) {
+
+    if (type === "clear") {
+
+        temperatureSlider.value = 22;
+        rainSlider.value = 0;
+        cloudSlider.value = 10;
+        windSlider.value = 10;
+
+    }
+
+    if (type === "rain") {
+
+        temperatureSlider.value = 15;
+        rainSlider.value = 70;
+        cloudSlider.value = 90;
+        windSlider.value = 25;
+
+    }
+
+    if (type === "snow") {
+
+        temperatureSlider.value = -4;
+        rainSlider.value = 60;
+        cloudSlider.value = 90;
+        windSlider.value = 15;
+
+    }
+
+    if (type === "storm") {
+
+        temperatureSlider.value = 20;
+        rainSlider.value = 95;
+        cloudSlider.value = 100;
+        windSlider.value = 90;
+
+    }
+
+    if (type === "cloudy") {
+
+        temperatureSlider.value = 17;
+        rainSlider.value = 5;
+        cloudSlider.value = 85;
+        windSlider.value = 15;
+
+    }
+
+    updateWeather();
+
+}
+
+
+/* SIMULATION CLOCK */
+
+function updateClock() {
+
+    const hours =
+    Math.floor(simulationMinutes / 60);
+
+    const minutes =
+    simulationMinutes % 60;
+
+
+    document.getElementById("clock").textContent =
+    String(hours).padStart(2, "0") +
+    ":" +
+    String(minutes).padStart(2, "0");
+
+
+    updateSky();
+
+}
+
+
+/* START */
+
+function startSimulation() {
+
+    if (simulationTimer !== null) {
+        return;
+    }
+
+
+    document.getElementById("status").textContent =
+    "Simulation running ▶️";
+
+
+    simulationTimer =
+    setInterval(function() {
+
+        simulationMinutes += 10;
+
+
+        if (simulationMinutes >= 1440) {
+
+            simulationMinutes = 0;
+
+        }
+
+
+        updateClock();
+
+    }, 1000);
+
+}
+
+
+/* PAUSE */
+
+function pauseSimulation() {
+
+    clearInterval(simulationTimer);
+
+    simulationTimer = null;
+
+
+    document.getElementById("status").textContent =
+    "Simulation paused ⏸️";
+
+}
+
+
+/* RESET */
+
+function resetSimulation() {
+
+    pauseSimulation();
+
+
+    simulationMinutes = 720;
+
+
+    temperatureSlider.value = 20;
+
+    rainSlider.value = 0;
+
+    cloudSlider.value = 20;
+
+    windSlider.value = 10;
+
+
+    updateWeather();
+
+    updateClock();
+
+}
+
+
+/* SLIDERS */
+
+temperatureSlider.addEventListener(
+"input",
+updateWeather
+);
+
+rainSlider.addEventListener(
+"input",
+updateWeather
+);
+
+cloudSlider.addEventListener(
+"input",
+updateWeather
+);
+
+windSlider.addEventListener(
+"input",
+updateWeather
+);
+
+
+/* START */
+
+updateWeather();
+
+updateClock();
+
+</script>
+
+</body>
+  </html>
