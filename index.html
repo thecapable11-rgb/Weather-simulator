@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Simulator</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#07111f;
+color:white;
+}
+
+header{
+text-align:center;
+padding:20px 10px 14px;
+}
+
+header h1{
+margin:0;
+font-size:28px;
+}
+
+header p{
+margin:6px 0 0;
+font-size:13px;
+color:#9fb1c5;
+}
+
+.app{
+width:min(1000px,94%);
+margin:auto;
+padding-bottom:40px;
+}
+
+/* SKY */
+
+.sky{
+height:410px;
+border-radius:25px;
+overflow:hidden;
+position:relative;
+background:linear-gradient(#238ed0,#a7def7);
+box-shadow:0 18px 50px #0006;
+transition:background 1s;
+}
+
+.location,.time{
+position:absolute;
+top:16px;
+background:#0005;
+padding:8px 12px;
+border-radius:10px;
+font-size:13px;
+z-index:10;
+}
+
+.location{left:16px}
+.time{right:16px}
+
+.sun{
+position:absolute;
+top:45px;
+right:55px;
+font-size:70px;
+}
+
+.moon{
+display:none;
+position:absolute;
+top:45px;
+right:55px;
+font-size:60px;
+}
+
+.cloud{
+position:absolute;
+font-size:70px;
+opacity:.75;
+animation:cloudMove linear infinite;
+}
+
+.cloud1{
+top:80px;
+left:-180px;
+animation-duration:40s;
+}
+
+.cloud2{
+top:180px;
+left:-300px;
+animation-duration:55s;
+}
+
+.cloud3{
+top:270px;
+left:-220px;
+font-size:55px;
+animation-duration:47s;
+}
+
+@keyframes cloudMove{
+from{transform:translateX(-150px)}
+to{transform:translateX(1200px)}
+}
+
+.center{
+position:absolute;
+inset:0;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+z-index:5;
+text-shadow:0 2px 8px #0005;
+}
+
+.icon{
+font-size:82px;
+}
+
+.temperature{
+font-size:65px;
+font-weight:bold;
+letter-spacing:-3px;
+}
+
+.condition{
+font-size:23px;
+font-weight:bold;
+}
+
+.clock{
+font-size:16px;
+margin-top:7px;
+}
+
+/* EFFECTS */
+
+#effects{
+position:absolute;
+inset:0;
+z-index:7;
+pointer-events:none;
+overflow:hidden;
+}
+
+.rain{
+position:absolute;
+width:2px;
+height:24px;
+background:#e7f5ff;
+animation:rainFall .55s linear infinite;
+}
+
+@keyframes rainFall{
+from{transform:translateY(-40px)}
+to{transform:translateY(450px)}
+}
+
+.snow{
+position:absolute;
+font-size:17px;
+animation:snowFall 4s linear infinite;
+}
+
+@keyframes snowFall{
+from{transform:translateY(-30px)}
+to{transform:translateY(450px)}
+}
+
+.fog{
+display:none;
+position:absolute;
+inset:0;
+background:#dbe7ed55;
+backdrop-filter:blur(3px);
+z-index:6;
+}
+
+.flash{
+position:absolute;
+inset:0;
+background:white;
+opacity:0;
+z-index:20;
+}
+
+.flashOn{
+animation:flash .35s;
+}
+
+@keyframes flash{
+0%{opacity:0}
+15%{opacity:.9}
+35%{opacity:0}
+55%{opacity:.7}
+100%{opacity:0}
+}
+
+/* PANELS */
+
+.panel{
+margin-top:15px;
+padding:18px;
+background:#101f31;
+border:1px solid #263b53;
+border-radius:20px;
+}
+
+.title{
+font-size:19px;
+font-weight:bold;
+margin-bottom:15px;
+}
+
+.controls{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:18px;
+}
+
+.control label{
+display:flex;
+justify-content:space-between;
+font-size:13px;
+margin-bottom:8px;
+}
+
+.value{
+color:#58d5ff;
+font-weight:bold;
+}
+
+input[type=range]{
+width:100%;
+accent-color:#28b7ef;
+}
+
+/* BUTTONS */
+
+.buttons{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+}
+
+button,select{
+border:0;
+border-radius:11px;
+padding:11px 14px;
+background:#223953;
+color:white;
+cursor:pointer;
+font-size:14px;
+}
+
+button:hover{
+background:#31516f;
+}
+
+button:active{
+transform:scale(.96);
+}
+
+.primary{
+background:#087db3;
+}
+
+.danger{
+background:#7d2530;
+}
+
+select{
+width:100%;
+background:#1c334b;
+border:1px solid #35516b;
+}
+
+/* CITIES */
+
+.cityButtons{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:8px;
+}
+
+/* SEASON */
+
+.seasonBox{
+background:#172b42;
+border-radius:15px;
+padding:16px;
+}
+
+.seasonName{
+font-size:25px;
+font-weight:bold;
+}
+
+.seasonDates{
+margin-top:6px;
+color:#9fb1c5;
+font-size:14px;
+}
+
+.seasonProgress{
+margin-top:14px;
+height:9px;
+background:#07111f;
+border-radius:20px;
+overflow:hidden;
+}
+
+.seasonProgressBar{
+height:100%;
+width:0%;
+background:#28b7ef;
+transition:width .3s;
+}
+
+.dayCounter{
+margin-top:9px;
+font-size:12px;
+color:#8298ad;
+}
+
+/* DATA */
+
+.data{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:9px;
+}
+
+.card{
+background:#172b42;
+padding:13px;
+border-radius:13px;
+}
+
+.cardName{
+font-size:10px;
+color:#91a7bb;
+}
+
+.cardValue{
+font-size:20px;
+font-weight:bold;
+margin-top:5px;
+}
+
+.cardSmall{
+font-size:10px;
+color:#70869c;
+margin-top:4px;
+}
+
+/* WARNING */
+
+.warning{
+display:none;
+margin-top:12px;
+padding:12px;
+border-radius:12px;
+background:#60212a;
+border:1px solid #a83c49;
+font-weight:bold;
+}
+
+@media(max-width:650px){
+
+.controls{
+grid-template-columns:1fr;
+}
+
+.cityButtons{
+grid-template-columns:1fr 1fr;
+}
+
+.data{
+grid-template-columns:1fr 1fr;
+}
+
+.sky{
+height:390px;
+}
+
+.temperature{
+font-size:58px;
+}
+
+.icon{
+font-size:70px;
+}
+
+}
+
+@media(max-width:400px){
+
+.data{
+grid-template-columns:1fr;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🌦️ Weather Simulator</h1>
+<p>Control the atmosphere • Create your own weather</p>
+</header>
+
+<div class="app">
+
+<!-- SKY -->
+
+<div class="sky" id="sky">
+
+<div class="location" id="location">
+📍 Simulation World
+</div>
+
+<div class="time" id="time">
+☀️ DAY 12:00
+</div>
+
+<div class="sun" id="sun">☀️</div>
+<div class="moon" id="moon">🌙</div>
+
+<div class="cloud cloud1">☁️</div>
+<div class="cloud cloud2">☁️</div>
+<div class="cloud cloud3">☁️</div>
+
+<div class="center">
+
+<div class="icon" id="icon">☀️</div>
+
+<div class="temperature" id="mainTemp">
+20°C
+</div>
+
+<div class="condition" id="condition">
+Clear Sky
+</div>
+
+<div class="clock" id="clock">
+12:00
+</div>
+
+</div>
+
+<div id="effects"></div>
+<div class="fog" id="fog"></div>
+<div class="flash" id="flash"></div>
+
+</div>
+
+
+<!-- CITIES -->
+
+<div class="panel">
+
+<div class="title">
+🏙️ Choose Location
+</div>
+
+<div class="cityButtons">
+
+<button onclick="city('Stockholm')">🇸🇪 Stockholm</button>
+<button onclick="city('Gothenburg')">🇸🇪 Gothenburg</button>
+<button onclick="city('London')">🇬🇧 London</button>
+<button onclick="city('New York')">🇺🇸 New York</button>
+<button onclick="city('Tokyo')">🇯🇵 Tokyo</button>
+<button onclick="city('Dubai')">🇦🇪 Dubai</button>
+<button onclick="city('Sydney')">🇦🇺 Sydney</button>
+<button onclick="city('Nairobi')">🇰🇪 Nairobi</button>
+
+</div>
+
+</div>
+
+
+<!-- SEASON -->
+
+<div class="panel">
+
+<div class="title">
+🍂 Choose Season
+</div>
+
+<select id="seasonSelect" onchange="changeSeason()">
+
+<option value="spring">🌸 Spring</option>
+<option value="summer" selected>☀️ Summer</option>
+<option value="autumn">🍂 Autumn</option>
+<option value="winter">❄️ Winter</option>
+
+</select>
+
+<div class="seasonBox" style="margin-top:14px">
+
+<div class="seasonName" id="seasonName">
+☀️ Summer
+</div>
+
+<div class="seasonDates" id="seasonDates">
+June 1 – August 31
+</div>
+
+<div class="seasonProgress">
+<div class="seasonProgressBar" id="seasonBar"></div>
+</div>
+
+<div class="dayCounter" id="dayCounter">
+Day 1 of 92
+</div>
+
+</div>
+
+</div>
+
+
+<!-- WEATHER CONTROLS -->
+
+<div class="panel">
+
+<div class="title">
+🎛️ Control Weather
+</div>
+
+<div class="controls">
+
+<div class="control">
+<label>
+<span>🌡️ Temperature</span>
+<span class="value" id="tempValue">20°C</span>
+</label>
+<input id="temp" type="range" min="-40" max="50" value="20">
+</div>
+
+<div class="control">
+<label>
+<span>💧 Humidity</span>
+<span class="value" id="humidityValue">50%</span>
+</label>
+<input id="humidity" type="range" min="0" max="100" value="50">
+</div>
+
+<div class="control">
+<label>
+<span>☁️ Cloud Cover</span>
+<span class="value" id="cloudValue">20%</span>
+</label>
+<input id="cloud" type="range" min="0" max="100" value="20">
+</div>
+
+<div class="control">
+<label>
+<span>🌧️ Precipitation</span>
+<span class="value" id="precipValue">0%</span>
+</label>
+<input id="precip" type="range" min="0" max="100" value="0">
+</div>
+
+<div class="control">
+<label>
+<span>💨 Wind Speed</span>
+<span class="value" id="windValue">10 km/h</span>
+</label>
+<input id="wind" type="range" min="0" max="200" value="10">
+</div>
+
+<div class="control">
+<label>
+<span>🧭 Wind Direction</span>
+<span class="value" id="directionValue">N</span>
+</label>
+<input id="direction" type="range" min="0" max="359" value="0">
+</div>
+
+</div>
+
+</div>
+
+
+<!-- PRESETS -->
+
+<div class="panel">
+
+<div class="title">
+⚡ Weather Presets
+</div>
+
+<div class="buttons">
+
+<button onclick="preset('clear')">☀️ Clear</button>
+<button onclick="preset('partly')">🌤️ Partly Cloudy</button>
+<button onclick="preset('rain')">🌧️ Rain</button>
+<button onclick="preset('storm')">⛈️ Thunderstorm</button>
+<button onclick="preset('snow')">❄️ Snow</button>
+<button onclick="preset('blizzard')">🌨️ Blizzard</button>
+<button onclick="preset('fog')">🌫️ Fog</button>
+<button onclick="preset('heat')">🔥 Heatwave</button>
+
+</div>
+
+</div>
+
+
+<!-- EXTREME WEATHER -->
+
+<div class="panel">
+
+<div class="title">
+🌀 Extreme Weather
+</div>
+
+<div class="buttons">
+
+<button onclick="hurricane()">🌀 Hurricane</button>
+<button onclick="tornado()">🌪️ Tornado</button>
+<button onclick="tropical()">🌴 Tropical Storm</button>
+<button class="danger" onclick="clearExtreme()">✖ Clear Events</button>
+
+</div>
+
+<div id="extremeStatus"
+style="margin-top:12px;color:#83e5b8;font-size:13px">
+No active extreme weather
+</div>
+
+</div>
+
+
+<!-- TIME -->
+
+<div class="panel">
+
+<div class="title">
+🕐 Simulation Time
+</div>
+
+<div class="buttons">
+
+<button class="primary" onclick="start()">▶️ Start</button>
+<button onclick="pause()">⏸️ Pause</button>
+<button onclick="hour()">⏩ +1 Hour</button>
+<button onclick="day()">📅 +1 Day</button>
+<button onclick="reset()">🔄 Reset</button>
+
+</div>
+
+</div>
+
+
+<!-- INFORMATION -->
+
+<div class="panel">
+
+<div class="title">
+📊 Weather Information
+</div>
+
+<div class="data">
+
+<div class="card">
+<div class="cardName">DATE</div>
+<div class="cardValue" id="dateDisplay">June 1</div>
+</div>
+
+<div class="card">
+<div class="cardName">SEASON</div>
+<div class="cardValue" id="seasonDisplay">Summer</div>
+</div>
+
+<div class="card">
+<div class="cardName">CLIMATE</div>
+<div class="cardValue" id="climate">Temperate</div>
+</div>
+
+<div class="card">
+<div class="cardName">TEMPERATURE</div>
+<div class="cardValue" id="dataTemp">20°C</div>
+<div class="cardSmall" id="feels">Feels like 20°C</div>
+</div>
+
+<div class="card">
+<div class="cardName">HUMIDITY</div>
+<div class="cardValue" id="dataHumidity">50%</div>
+</div>
+
+<div class="card">
+<div class="cardName">WIND</div>
+<div class="cardValue" id="dataWind">10 km/h</div>
+<div class="cardSmall" id="windDir">From N</div>
+</div>
+
+<div class="card">
+<div class="cardName">PRESSURE</div>
+<div class="cardValue" id="pressure">1013 hPa</div>
+</div>
+
+<div class="card">
+<div class="cardName">PRECIPITATION</div>
+<div class="cardValue" id="dataPrecip">0%</div>
+<div class="cardSmall" id="precipType">None</div>
+</div>
+
+<div class="card">
+<div class="cardName">VISIBILITY</div>
+<div class="cardValue" id="visibility">20 km</div>
+</div>
+
+</div>
+
+<div class="warning" id="warning">
+⚠️ Severe weather warning
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   VARIABLES
+========================= */
+
+const temp=document.getElementById("temp");
+const humidity=document.getElementById("humidity");
+const cloud=document.getElementById("cloud");
+const precip=document.getElementById("precip");
+const wind=document.getElementById("wind");
+const direction=document.getElementById("direction");
+
+let currentCity="Simulation World";
+let currentClimate="Temperate";
+
+let simHour=12;
+
+/*
+The simulator starts on June 1.
+Changing season changes the date
+to the first day of that season.
+*/
+
+let simMonth=6;
+let simDay=1;
+
+let timer=null;
+
+
+/* =========================
+   SEASON DATA
+========================= */
+
+const seasons={
+
+spring:{
+name:"🌸 Spring",
+months:"March 1 – May 31",
+startMonth:3,
+startDay:1,
+days:92
+},
+
+summer:{
+name:"☀️ Summer",
+months:"June 1 – August 31",
+startMonth:6,
+startDay:1,
+days:92
+},
+
+autumn:{
+name:"🍂 Autumn",
+months:"September 1 – November 30",
+startMonth:9,
+startDay:1,
+days:91
+},
+
+winter:{
+name:"❄️ Winter",
+months:"December 1 – February 28",
+startMonth:12,
+startDay:1,
+days:90
+}
+
+};
+
+let currentSeason="summer";
+
+
+/* =========================
+   CITIES
+========================= */
+
+const cities={
+
+Stockholm:{
+temp:18,
+humidity:55,
+climate:"Continental"
+},
+
+Gothenburg:{
+temp:19,
+humidity:65,
+climate:"Oceanic"
+},
+
+London:{
+temp:19,
+humidity:70,
+climate:"Oceanic"
+},
+
+"New York":{
+temp:24,
+humidity:60,
+climate:"Humid Continental"
+},
+
+Tokyo:{
+temp:27,
+humidity:75,
+climate:"Humid Subtropical"
+},
+
+Dubai:{
+temp:38,
+humidity:35,
+climate:"Desert"
+},
+
+Sydney:{
+temp:18,
+humidity:60,
+climate:"Temperate"
+},
+
+Nairobi:{
+temp:23,
+humidity:65,
+climate:"Tropical Highland"
+}
+
+};
+
+
+/* =========================
+   CITY
+========================= */
+
+function city(name){
+
+let c=cities[name];
+
+currentCity=name;
+currentClimate=c.climate;
+
+document.getElementById("location").textContent=
+"📍 "+name;
+
+document.getElementById("climate").textContent=
+c.climate;
+
+temp.value=c.temp;
+humidity.value=c.humidity;
+cloud.value=25;
+precip.value=0;
+wind.value=12;
+
+update();
+
+}
+
+
+/* =========================
+   SEASON
+========================= */
+
+function changeSeason(){
+
+currentSeason=
+document.getElementById("seasonSelect").value;
+
+let s=seasons[currentSeason];
+
+/* Move date to first day of selected season */
+
+simMonth=s.startMonth;
+simDay=s.startDay;
+
+
+/* Update display */
+
+document.getElementById("seasonName").textContent=
+s.name;
+
+document.getElementById("seasonDates").textContent=
+s.months;
+
+document.getElementById("seasonDisplay").textContent=
+s.name.substring(2);
+
+updateDate();
+
+}
+
+
+/* =========================
+   DATE HELPERS
+========================= */
+
+const monthNames=[
+"",
+"January",
+"February",
+"March",
+"April",
+"May",
+"June",
+"July",
+"August",
+"September",
+"October",
+"November",
+"December"
+];
+
+const monthDays=[
+0,
+31,
+28,
+31,
+30,
+31,
+30,
+31,
+31,
+30,
+31,
+30,
+31
+];
+
+
+/* Add one simulated day */
+
+function addDay(){
+
+simDay++;
+
+if(simDay>monthDays[simMonth]){
+
+simDay=1;
+simMonth++;
+
+if(simMonth>12)
+simMonth=1;
+
+}
+
+updateDate();
+checkSeasonFromDate();
+
+}
+
+
+/* Display date */
+
+function updateDate(){
+
+let dateText=
+monthNames[simMonth]+" "+simDay;
+
+document.getElementById("dateDisplay").textContent=
+dateText;
+
+
+/* Find day within selected season */
+
+let s=seasons[currentSeason];
+
+let dayNumber=getSeasonDay();
+
+let percent=
+((dayNumber-1)/(s.days-1))*100;
+
+document.getElementById("dayCounter").textContent=
+"Day "+dayNumber+" of "+s.days;
+
+document.getElementById("seasonBar").style.width=
+Math.max(0,Math.min(100,percent))+"%";
+
+}
+
+
+/* Calculate day number */
+
+function getSeasonDay(){
+
+let dayNumber=0;
+
+if(currentSeason==="spring"){
+
+if(simMonth===3)
+dayNumber=simDay;
+
+else if(simMonth===4)
+dayNumber=31+simDay;
+
+else if(simMonth===5)
+dayNumber=61+simDay;
+
+}
+
+else if(currentSeason==="summer"){
+
+if(simMonth===6)
+dayNumber=simDay;
+
+else if(simMonth===7)
+dayNumber=30+simDay;
+
+else if(simMonth===8)
+dayNumber=61+simDay;
+
+}
+
+else if(currentSeason==="autumn"){
+
+if(simMonth===9)
+dayNumber=simDay;
+
+else if(simMonth===10)
+dayNumber=30+simDay;
+
+else if(simMonth===11)
+dayNumber=61+simDay;
+
+}
+
+else if(currentSeason==="winter"){
+
+if(simMonth===12)
+dayNumber=simDay;
+
+else if(simMonth===1)
+dayNumber=31+simDay;
+
+else if(simMonth===2)
+dayNumber=62+simDay;
+
+}
+
+return Math.max(1,dayNumber);
+
+}
+
+
+/* Automatically change season
+when the date reaches another season */
+
+function checkSeasonFromDate(){
+
+let newSeason=currentSeason;
+
+if(simMonth>=3 && simMonth<=5)
+newSeason="spring";
+
+else if(simMonth>=6 && simMonth<=8)
+newSeason="summer";
+
+else if(simMonth>=9 && simMonth<=11)
+newSeason="autumn";
+
+else
+newSeason="winter";
+
+if(newSeason!==currentSeason){
+
+currentSeason=newSeason;
+
+document.getElementById("seasonSelect").value=
+newSeason;
+
+let s=seasons[newSeason];
+
+document.getElementById("seasonName").textContent=
+s.name;
+
+document.getElementById("seasonDates").textContent=
+s.months;
+
+document.getElementById("seasonDisplay").textContent=
+s.name.substring(2);
+
+}
+
+updateDate();
+
+}
+
+
+/* =========================
+   DIRECTION
+========================= */
+
+function directionName(v){
+
+const dirs=[
+"N","NNE","NE","ENE",
+"E","ESE","SE","SSE",
+"S","SSW","SW","WSW",
+"W","WNW","NW","NNW"
+];
+
+return dirs[Math.round(v/22.5)%16];
+
+}
+
+
+/* =========================
+   WEATHER ENGINE
+========================= */
+
+function update(){
+
+let t=+temp.value;
+let h=+humidity.value;
+let c=+cloud.value;
+let p=+precip.value;
+let w=+wind.value;
+
+let condition="Clear Sky";
+let icon="☀️";
+let precipitationType="None";
+
+
+if(t<=0 && p>10){
+
+condition="Snow";
+icon="❄️";
+precipitationType="Snow";
+
+}
+
+else if(p>80 && c>70 && w>60){
+
+condition="Thunderstorm";
+icon="⛈️";
+precipitationType="Heavy Rain";
+
+}
+
+else if(p>60){
+
+condition="Heavy Rain";
+icon="🌧️";
+precipitationType="Heavy Rain";
+
+}
+
+else if(p>15){
+
+condition="Rain";
+icon="🌦️";
+precipitationType="Rain";
+
+}
+
+else if(h>90 && c>70){
+
+condition="Fog";
+icon="🌫️";
+
+}
+
+else if(c>80){
+
+condition="Overcast";
+icon="☁️";
+
+}
+
+else if(c>35){
+
+condition="Partly Cloudy";
+icon="🌤️";
+
+}
+
+if(t>=35 && p<20){
+
+condition="Heatwave";
+icon="🔥";
+
+}
+
+
+/* FEELS LIKE */
+
+let feels=t;
+
+if(t>=20)
+feels=t+(h-40)*.1;
+
+if(t<=10)
+feels=t-w*.06;
+
+
+/* PRESSURE */
+
+let pressureValue=
+Math.round(1018-p*.25-w*.04);
+
+
+/* VISIBILITY */
+
+let vis=20;
+
+if(h>85)vis-=6;
+
+if(p>40)vis-=p*.12;
+
+if(condition==="Fog")vis=.5;
+
+vis=Math.max(.3,vis);
+
+
+/* OUTPUT */
+
+document.getElementById("tempValue").textContent=t+"°C";
+document.getElementById("humidityValue").textContent=h+"%";
+document.getElementById("cloudValue").textContent=c+"%";
+document.getElementById("precipValue").textContent=p+"%";
+document.getElementById("windValue").textContent=w+" km/h";
+
+document.getElementById("directionValue").textContent=
+directionName(+direction.value);
+
+document.getElementById("mainTemp").textContent=t+"°C";
+document.getElementById("icon").textContent=icon;
+document.getElementById("condition").textContent=condition;
+
+document.getElementById("dataTemp").textContent=t+"°C";
+document.getElementById("dataHumidity").textContent=h+"%";
+
+document.getElementById("dataWind").textContent=
+w+" km/h";
+
+document.getElementById("windDir").textContent=
+"From "+directionName(+direction.value);
+
+document.getElementById("pressure").textContent=
+pressureValue+" hPa";
+
+document.getElementById("dataPrecip").textContent=
+p+"%";
+
+document.getElementById("precipType").textContent=
+precipitationType;
+
+document.getElementById("visibility").textContent=
+vis.toFixed(1)+" km";
+
+document.getElementById("feels").textContent=
+"Feels like "+Math.round(feels)+"°C";
+
+
+/* WARNING */
+
+const warning=document.getElementById("warning");
+
+if(w>=100){
+
+warning.style.display="block";
+warning.textContent=
+"⚠️ EXTREME WIND WARNING • "+w+" km/h";
+
+}
+
+else if(p>=80){
+
+warning.style.display="block";
+warning.textContent=
+"⚠️ SEVERE PRECIPITATION WARNING";
+
+}
+
+else{
+
+warning.style.display="none";
+
+}
+
+
+/* EFFECTS */
+
+visuals(c,p,t,condition);
+
+}
+
+
+/* =========================
+   SKY
+========================= */
+
+function updateSky(){
+
+let h=simHour;
+
+const sky=document.getElementById("sky");
+const sun=document.getElementById("sun");
+const moon=document.getElementById("moon");
+
+if(h<6 || h>=21){
+
+sky.style.background=
+"linear-gradient(#020617,#172554)";
+
+sun.style.display="none";
+moon.style.display="block";
+
+}
+
+else if(h<9){
+
+sky.style.background=
+"linear-gradient(#f97316,#fcd34d)";
+
+sun.style.display="block";
+moon.style.display="none";
+
+}
+
+else if(h>=18){
+
+sky.style.background=
+"linear-gradient(#fb923c,#fda4af)";
+
+sun.style.display="block";
+moon.style.display="none";
+
+}
+
+else{
+
+sky.style.background=
+cloud.value>75
+?"linear-gradient(#526273,#9aa7b5)"
+:"linear-gradient(#238ed0,#a7def7)";
+
+sun.style.display="block";
+moon.style.display="none";
+
+}
+
+document.getElementById("clock").textContent=
+String(h).padStart(2,"0")+":00";
+
+document.getElementById("time").textContent=
+(h>=6 && h<21?"☀️ DAY ":"🌙 NIGHT ")+
+String(h).padStart(2,"0")+":00";
+
+}
+
+
+/* =========================
+   VISUAL EFFECTS
+========================= */
+
+function visuals(c,p,t,condition){
+
+const box=document.getElementById("effects");
+
+box.innerHTML="";
+
+if(t<=0 && p>10){
+
+for(let i=0;i<60;i++){
+
+let x=document.createElement("div");
+
+x.className="snow";
+x.textContent="❄️";
+
+x.style.left=Math.random()*100+"%";
+x.style.animationDelay=Math.random()*4+"s";
+
+box.appendChild(x);
+
+}
+
+}
+
+else if(p>10){
+
+for(let i=0;i<Math.min(100,p);i++){
+
+let x=document.createElement("div");
+
+x.className="rain";
+
+x.style.left=Math.random()*100+"%";
+x.style.animationDelay=Math.random()+"s";
+
+box.appendChild(x);
+
+}
+
+}
+
+
+if(condition==="Fog")
+document.getElementById("fog").style.display="block";
+else
+document.getElementById("fog").style.display="none";
+
+}
+
+
+/* =========================
+   PRESETS
+========================= */
+
+function preset(x){
+
+if(x==="clear"){
+temp.value=24;
+humidity.value=40;
+cloud.value=5;
+precip.value=0;
+wind.value=8;
+}
+
+if(x==="partly"){
+temp.value=20;
+humidity.value=55;
+cloud.value=45;
+precip.value=5;
+wind.value=12;
+}
+
+if(x==="rain"){
+temp.value=15;
+humidity.value=90;
+cloud.value=95;
+precip.value=70;
+wind.value=25;
+}
+
+if(x==="storm"){
+temp.value=22;
+humidity.value=92;
+cloud.value=100;
+precip.value=95;
+wind.value=90;
+}
+
+if(x==="snow"){
+temp.value=-3;
+humidity.value=90;
+cloud.value=95;
+precip.value=65;
+wind.value=18;
+}
+
+if(x==="blizzard"){
+temp.value=-15;
+humidity.value=95;
+cloud.value=100;
+precip.value=95;
+wind.value=130;
+}
+
+if(x==="fog"){
+temp.value=8;
+humidity.value=98;
+cloud.value=90;
+precip.value=5;
+wind.value=3;
+}
+
+if(x==="heat"){
+temp.value=40;
+humidity.value=25;
+cloud.value=5;
+precip.value=0;
+wind.value=10;
+}
+
+update();
+
+}
+
+
+/* =========================
+   EXTREME WEATHER
+========================= */
+
+function hurricane(){
+
+document.getElementById("extremeStatus").textContent=
+"🌀 ACTIVE HURRICANE • Category 4";
+
+temp.value=27;
+humidity.value=90;
+cloud.value=100;
+precip.value=100;
+wind.value=180;
+
+update();
+
+}
+
+
+function tornado(){
+
+document.getElementById("extremeStatus").textContent=
+"🌪️ TORNADO WARNING • EXTREME WIND";
+
+temp.value=23;
+humidity.value=85;
+cloud.value=100;
+precip.value=85;
+wind.value=200;
+
+update();
+
+}
+
+
+function tropical(){
+
+document.getElementById("extremeStatus").textContent=
+"🌴 ACTIVE TROPICAL STORM";
+
+temp.value=26;
+humidity.value=85;
+cloud.value=95;
+precip.value=75;
+wind.value=90;
+
+update();
+
+}
+
+
+function clearExtreme(){
+
+document.getElementById("extremeStatus").textContent=
+"No active extreme weather";
+
+}
+
+
+/* =========================
+   TIME
+========================= */
+
+function start(){
+
+if(timer)return;
+
+timer=setInterval(()=>{
+
+simHour++;
+
+if(simHour>=24){
+
+simHour=0;
+addDay();
+
+}
+
+updateSky();
+
+},1000);
+
+}
+
+
+function pause(){
+
+clearInterval(timer);
+timer=null;
+
+}
+
+
+function hour(){
+
+simHour++;
+
+if(simHour>=24){
+
+simHour=0;
+addDay();
+
+}
+
+updateSky();
+
+}
+
+
+function day(){
+
+addDay();
+
+}
+
+
+function reset(){
+
+pause();
+
+simHour=12;
+
+let s=seasons[currentSeason];
+
+simMonth=s.startMonth;
+simDay=s.startDay;
+
+updateDate();
+updateSky();
+
+}
+
+
+/* =========================
+   SLIDERS
+========================= */
+
+[
+temp,
+humidity,
+cloud,
+precip,
+wind,
+direction
+].forEach(x=>{
+x.addEventListener("input",update);
+});
+
+
+/* =========================
+   START
+========================= */
+
+update();
+updateSky();
+updateDate();
+
+</script>
+
+</body>
+  </html>
