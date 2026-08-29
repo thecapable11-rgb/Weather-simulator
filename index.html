@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Weather World Simulator</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Arial,Helvetica,sans-serif;
+background:#06101c;
+color:#fff;
+}
+
+button,input,select{
+font:inherit;
+}
+
+header{
+padding:15px;
+background:#0b1726;
+border-bottom:1px solid #26394d;
+position:sticky;
+top:0;
+z-index:50;
+}
+
+.headerRow{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+}
+
+.logo{
+font-size:23px;
+font-weight:800;
+}
+
+.sub{
+font-size:11px;
+color:#8ca2b8;
+margin-top:3px;
+}
+
+.app{
+max-width:1200px;
+margin:auto;
+padding:12px;
+}
+
+/* MAP */
+
+.mapBox{
+position:relative;
+height:520px;
+background:#08243a;
+border:1px solid #28445d;
+border-radius:22px;
+overflow:hidden;
+box-shadow:0 15px 50px #0007;
+}
+
+.ocean{
+position:absolute;
+inset:0;
+background:
+radial-gradient(circle at 20% 30%,#15557a 0,transparent 28%),
+radial-gradient(circle at 75% 65%,#0d4264 0,transparent 30%),
+linear-gradient(#0a3654,#061e34);
+}
+
+/* stylized continents */
+
+.continent{
+position:absolute;
+background:#3b704d;
+border:2px solid #52875f;
+box-shadow:inset 0 0 20px #1b4227;
+cursor:pointer;
+transition:.2s;
+}
+
+.continent:hover{
+filter:brightness(1.25);
+}
+
+.na{
+width:190px;
+height:150px;
+left:11%;
+top:22%;
+border-radius:50% 35% 55% 35%;
+transform:rotate(-12deg);
+}
+
+.sa{
+width:105px;
+height:180px;
+left:30%;
+top:53%;
+border-radius:45% 55% 35% 65%;
+transform:rotate(12deg);
+}
+
+.eu{
+width:125px;
+height:70px;
+left:48%;
+top:25%;
+border-radius:45%;
+}
+
+.af{
+width:150px;
+height:190px;
+left:47%;
+top:34%;
+border-radius:45% 45% 35% 50%;
+transform:rotate(5deg);
+}
+
+.as{
+width:280px;
+height:155px;
+left:58%;
+top:20%;
+border-radius:40% 30% 50% 35%;
+transform:rotate(4deg);
+}
+
+.au{
+width:125px;
+height:75px;
+left:76%;
+top:67%;
+border-radius:50%;
+}
+
+.greenland{
+width:80px;
+height:70px;
+left:39%;
+top:7%;
+border-radius:50%;
+}
+
+.antarctica{
+position:absolute;
+bottom:-45px;
+left:15%;
+width:75%;
+height:80px;
+background:#dcebf2;
+border-radius:50% 50% 0 0;
+}
+
+.city{
+position:absolute;
+z-index:10;
+transform:translate(-50%,-50%);
+cursor:pointer;
+text-align:center;
+}
+
+.dot{
+width:12px;
+height:12px;
+background:#ffd54a;
+border:2px solid #fff;
+border-radius:50%;
+box-shadow:0 0 12px #ffd54a;
+margin:auto;
+}
+
+.cityName{
+font-size:10px;
+font-weight:bold;
+margin-top:3px;
+text-shadow:0 2px 5px #000;
+white-space:nowrap;
+}
+
+.stormMarker{
+position:absolute;
+z-index:20;
+font-size:34px;
+transform:translate(-50%,-50%);
+animation:pulse 1.5s infinite;
+cursor:pointer;
+filter:drop-shadow(0 0 8px #000);
+}
+
+@keyframes pulse{
+50%{transform:translate(-50%,-50%) scale(1.2)}
+}
+
+/* controls */
+
+.panel{
+background:#0d1b2b;
+border:1px solid #263d54;
+border-radius:18px;
+padding:16px;
+margin-top:12px;
+}
+
+.title{
+font-weight:800;
+font-size:18px;
+margin-bottom:14px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:18px;
+}
+
+.control label{
+display:flex;
+justify-content:space-between;
+font-size:13px;
+margin-bottom:7px;
+}
+
+.val{
+color:#55d5ff;
+font-weight:bold;
+}
+
+input[type=range]{
+width:100%;
+accent-color:#22b8f0;
+}
+
+button,select{
+background:#1b3047;
+border:1px solid #304b65;
+color:#fff;
+padding:10px 12px;
+border-radius:11px;
+}
+
+button{
+cursor:pointer;
+}
+
+button:hover{
+background:#29445f;
+}
+
+button:active{
+transform:scale(.97);
+}
+
+.primary{
+background:#087cac;
+}
+
+.danger{
+background:#8b2635;
+}
+
+.buttons{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+}
+
+/* dashboard */
+
+.dashboard{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:9px;
+}
+
+.card{
+background:#15283d;
+border-radius:13px;
+padding:13px;
+}
+
+.cardName{
+font-size:10px;
+color:#8ea3b7;
+}
+
+.cardValue{
+font-size:21px;
+font-weight:800;
+margin-top:5px;
+}
+
+.cardSmall{
+font-size:10px;
+color:#71889e;
+margin-top:4px;
+}
+
+.selected{
+font-size:25px;
+font-weight:800;
+}
+
+.locationInfo{
+color:#8ea3b7;
+font-size:12px;
+margin-top:3px;
+}
+
+/* warning */
+
+.warning{
+display:none;
+background:#5d2027;
+border:1px solid #a63b48;
+padding:12px;
+border-radius:12px;
+margin-top:12px;
+font-weight:bold;
+}
+
+/* storm creation */
+
+.stormGrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+.status{
+text-align:center;
+margin-top:10px;
+color:#72e0b0;
+font-size:13px;
+}
+
+@media(max-width:700px){
+
+.mapBox{
+height:440px;
+}
+
+.grid{
+grid-template-columns:1fr;
+}
+
+.dashboard{
+grid-template-columns:1fr 1fr;
+}
+
+.na{
+width:140px;
+height:110px;
+}
+
+.as{
+width:190px;
+height:110px;
+}
+
+.af{
+width:110px;
+height:145px;
+}
+
+}
+
+@media(max-width:420px){
+
+.dashboard{
+grid-template-columns:1fr;
+}
+
+.cityName{
+font-size:8px;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="headerRow">
+<div>
+<div class="logo">🌍 WEATHER WORLD</div>
+<div class="sub">Global Atmospheric Simulation</div>
+</div>
+
+<button onclick="randomWeather()">🎲 Random World</button>
+</div>
+</header>
+
+<div class="app">
+
+<!-- MAP -->
+
+<div class="mapBox" id="map">
+
+<div class="ocean"></div>
+
+<div class="continent na" onclick="selectRegion('North America')"></div>
+<div class="continent sa" onclick="selectRegion('South America')"></div>
+<div class="continent eu" onclick="selectRegion('Europe')"></div>
+<div class="continent af" onclick="selectRegion('Africa')"></div>
+<div class="continent as" onclick="selectRegion('Asia')"></div>
+<div class="continent au" onclick="selectRegion('Australia')"></div>
+<div class="continent greenland" onclick="selectRegion('Arctic')"></div>
+<div class="antarctica" onclick="selectRegion('Antarctica')"></div>
+
+<!-- CITIES -->
+
+<div class="city" style="left:51%;top:28%" onclick="city('London')">
+<div class="dot"></div>
+<div class="cityName">London</div>
+</div>
+
+<div class="city" style="left:55%;top:31%" onclick="city('Paris')">
+<div class="dot"></div>
+<div class="cityName">Paris</div>
+</div>
+
+<div class="city" style="left:57%;top:27%" onclick="city('Stockholm')">
+<div class="dot"></div>
+<div class="cityName">Stockholm</div>
+</div>
+
+<div class="city" style="left:60%;top:29%" onclick="city('Moscow')">
+<div class="dot"></div>
+<div class="cityName">Moscow</div>
+</div>
+
+<div class="city" style="left:68%;top:32%" onclick="city('Tokyo')">
+<div class="dot"></div>
+<div class="cityName">Tokyo</div>
+</div>
+
+<div class="city" style="left:67%;top:48%" onclick="city('Mumbai')">
+<div class="dot"></div>
+<div class="cityName">Mumbai</div>
+</div>
+
+<div class="city" style="left:19%;top:34%" onclick="city('New York')">
+<div class="dot"></div>
+<div class="cityName">New York</div>
+</div>
+
+<div class="city" style="left:13%;top:45%" onclick="city('Mexico City')">
+<div class="dot"></div>
+<div class="cityName">Mexico City</div>
+</div>
+
+<div class="city" style="left:25%;top:69%" onclick="city('Lima')">
+<div class="dot"></div>
+<div class="cityName">Lima</div>
+</div>
+
+<div class="city" style="left:32%;top:77%" onclick="city('Buenos Aires')">
+<div class="dot"></div>
+<div class="cityName">Buenos Aires</div>
+</div>
+
+<div class="city" style="left:51%;top:44%" onclick="city('Nairobi')">
+<div class="dot"></div>
+<div class="cityName">Nairobi</div>
+</div>
+
+<div class="city" style="left:77%;top:72%" onclick="city('Sydney')">
+<div class="dot"></div>
+<div class="cityName">Sydney</div>
+</div>
+
+<div class="city" style="left:73%;top:56%" onclick="city('Jakarta')">
+<div class="dot"></div>
+<div class="cityName">Jakarta</div>
+</div>
+
+</div>
+
+
+<!-- SELECTED LOCATION -->
+
+<div class="panel">
+
+<div class="selected" id="selected">
+Simulation World
+</div>
+
+<div class="locationInfo" id="region">
+Click a city or region on the map
+</div>
+
+</div>
+
+
+<!-- WEATHER -->
+
+<div class="panel">
+
+<div class="title">🎛️ Weather Controls</div>
+
+<div class="grid">
+
+<div class="control">
+<label>
+<span>🌡 Temperature</span>
+<span class="val" id="tv">20°C</span>
+</label>
+<input id="temp" type="range" min="-50" max="50" value="20">
+</div>
+
+<div class="control">
+<label>
+<span>💧 Humidity</span>
+<span class="val" id="hv">50%</span>
+</label>
+<input id="humidity" type="range" min="0" max="100" value="50">
+</div>
+
+<div class="control">
+<label>
+<span>☁ Cloud Cover</span>
+<span class="val" id="cv">20%</span>
+</label>
+<input id="cloud" type="range" min="0" max="100" value="20">
+</div>
+
+<div class="control">
+<label>
+<span>🌧 Precipitation</span>
+<span class="val" id="pv">0%</span>
+</label>
+<input id="precip" type="range" min="0" max="100" value="0">
+</div>
+
+<div class="control">
+<label>
+<span>💨 Wind Speed</span>
+<span class="val" id="wv">15 km/h</span>
+</label>
+<input id="wind" type="range" min="0" max="250" value="15">
+</div>
+
+<div class="control">
+<label>
+<span>🧭 Wind Direction</span>
+<span class="val" id="dv">N</span>
+</label>
+<input id="direction" type="range" min="0" max="359" value="0">
+</div>
+
+</div>
+
+</div>
+
+
+<!-- WEATHER PRESETS -->
+
+<div class="panel">
+
+<div class="title">⚡ Weather Events</div>
+
+<div class="buttons">
+
+<button onclick="preset('clear')">☀️ Clear</button>
+<button onclick="preset('rain')">🌧 Rain</button>
+<button onclick="preset('snow')">❄️ Snow</button>
+<button onclick="preset('storm')">⛈ Thunderstorm</button>
+<button onclick="preset('heat')">🔥 Heatwave</button>
+<button onclick="preset('blizzard')">🌨 Blizzard</button>
+<button onclick="preset('fog')">🌫 Fog</button>
+
+</div>
+
+</div>
+
+
+<!-- EXTREME WEATHER -->
+
+<div class="panel">
+
+<div class="title">🌀 Extreme Weather Generator</div>
+
+<div class="stormGrid">
+
+<button onclick="spawnHurricane()">
+🌀 Create Hurricane
+</button>
+
+<button onclick="spawnTornado()">
+🌪 Create Tornado
+</button>
+
+<button onclick="spawnTropical()">
+🌴 Tropical Storm
+</button>
+
+<button class="danger" onclick="clearStorms()">
+✖ Clear Storms
+</button>
+
+</div>
+
+<div class="status" id="stormStatus">
+No active severe systems
+</div>
+
+</div>
+
+
+<!-- TIME -->
+
+<div class="panel">
+
+<div class="title">🕐 World Time</div>
+
+<div class="buttons">
+
+<button class="primary" onclick="startTime()">▶ Start</button>
+
+<button onclick="pauseTime()">⏸ Pause</button>
+
+<button onclick="addHour()">⏩ +1 Hour</button>
+
+<button onclick="addDay()">📅 +1 Day</button>
+
+<button onclick="resetTime()">🔄 Reset</button>
+
+</div>
+
+<div class="status" id="timeStatus">
+Simulation paused
+</div>
+
+</div>
+
+
+<!-- SEASON -->
+
+<div class="panel">
+
+<div class="title">🌎 Season & Climate</div>
+
+<div class="dashboard">
+
+<div class="card">
+<div class="cardName">SEASON</div>
+<div class="cardValue" id="season">Summer</div>
+</div>
+
+<div class="card">
+<div class="cardName">CLIMATE ZONE</div>
+<div class="cardValue" id="climate">Temperate</div>
+</div>
+
+<div class="card">
+<div class="cardName">HEMISPHERE</div>
+<div class="cardValue" id="hemisphere">Northern</div>
+</div>
+
+<div class="card">
+<div class="cardName">SIMULATED DATE</div>
+<div class="cardValue" id="date">Jun 21</div>
+</div>
+
+</div>
+
+</div>
+
+
+<!-- DASHBOARD -->
+
+<div class="panel">
+
+<div class="title">📡 Atmospheric Dashboard</div>
+
+<div class="dashboard">
+
+<div class="card">
+<div class="cardName">TEMPERATURE</div>
+<div class="cardValue" id="dt">20°C</div>
+<div class="cardSmall" id="feels">Feels like 20°C</div>
+</div>
+
+<div class="card">
+<div class="cardName">HUMIDITY</div>
+<div class="cardValue" id="dh">50%</div>
+<div class="cardSmall">Relative humidity</div>
+</div>
+
+<div class="card">
+<div class="cardName">WIND</div>
+<div class="cardValue" id="dw">15</div>
+<div class="cardSmall" id="windInfo">km/h • N</div>
+</div>
+
+<div class="card">
+<div class="cardName">PRECIPITATION</div>
+<div class="cardValue" id="dp">0%</div>
+<div class="cardSmall" id="ptype">None</div>
+</div>
+
+<div class="card">
+<div class="cardName">PRESSURE</div>
+<div class="cardValue" id="pressure">1013</div>
+<div class="cardSmall">hPa</div>
+</div>
+
+<div class="card">
+<div class="cardName">VISIBILITY</div>
+<div class="cardValue" id="visibility">20 km</div>
+<div class="cardSmall">Estimated</div>
+</div>
+
+<div class="card">
+<div class="cardName">DEW POINT</div>
+<div class="cardValue" id="dew">10°C</div>
+<div class="cardSmall">Estimated</div>
+</div>
+
+<div class="card">
+<div class="cardName">UV INDEX</div>
+<div class="cardValue" id="uv">5</div>
+<div class="cardSmall">Simulated</div>
+</div>
+
+</div>
+
+<div class="warning" id="warning">
+⚠️ SEVERE WEATHER WARNING
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   VARIABLES
+========================= */
+
+const temp=document.getElementById("temp");
+const humidity=document.getElementById("humidity");
+const cloud=document.getElementById("cloud");
+const precip=document.getElementById("precip");
+const wind=document.getElementById("wind");
+const direction=document.getElementById("direction");
+
+let selectedLocation="Simulation World";
+let selectedRegion="Global";
+
+let hour=12;
+let day=21;
+let month=6;
+
+let timer=null;
+
+
+/* =========================
+   CITIES
+========================= */
+
+const cities={
+
+"London":{
+region:"Europe",
+climate:"Oceanic",
+hemisphere:"Northern",
+temp:17
+},
+
+"Paris":{
+region:"Europe",
+climate:"Temperate",
+hemisphere:"Northern",
+temp:20
+},
+
+"Stockholm":{
+region:"Europe",
+climate:"Continental",
+hemisphere:"Northern",
+temp:15
+},
+
+"Moscow":{
+region:"Europe",
+climate:"Continental",
+hemisphere:"Northern",
+temp:13
+},
+
+"Tokyo":{
+region:"Asia",
+climate:"Humid Subtropical",
+hemisphere:"Northern",
+temp:24
+},
+
+"Mumbai":{
+region:"Asia",
+climate:"Tropical",
+hemisphere:"Northern",
+temp:28
+},
+
+"New York":{
+region:"North America",
+climate:"Humid Continental",
+hemisphere:"Northern",
+temp:22
+},
+
+"Mexico City":{
+region:"North America",
+climate:"Highland",
+hemisphere:"Northern",
+temp:21
+},
+
+"Lima":{
+region:"South America",
+climate:"Desert",
+hemisphere:"Southern",
+temp:20
+},
+
+"Buenos Aires":{
+region:"South America",
+climate:"Humid Subtropical",
+hemisphere:"Southern",
+temp:16
+},
+
+"Nairobi":{
+region:"Africa",
+climate:"Tropical Highland",
+hemisphere:"Southern",
+temp:22
+},
+
+"Sydney":{
+region:"Australia",
+climate:"Temperate",
+hemisphere:"Southern",
+temp:18
+},
+
+"Jakarta":{
+region:"Asia",
+climate:"Tropical",
+hemisphere:"Southern",
+temp:29
+
+}
+
+};
+
+
+/* =========================
+   CITY SELECT
+========================= */
+
+function city(name){
+
+let x=cities[name];
+
+selectedLocation=name;
+selectedRegion=x.region;
+
+document.getElementById("selected").textContent=
+"📍 "+name;
+
+document.getElementById("region").textContent=
+x.region+" • "+x.climate;
+
+document.getElementById("climate").textContent=
+x.climate;
+
+document.getElementById("hemisphere").textContent=
+x.hemisphere;
+
+temp.value=x.temp;
+
+humidity.value=
+x.climate==="Tropical"?80:55;
+
+cloud.value=25;
+
+precip.value=0;
+
+wind.value=12;
+
+update();
+
+}
+
+
+/* =========================
+   REGION
+========================= */
+
+function selectRegion(region){
+
+selectedLocation=region;
+selectedRegion=region;
+
+document.getElementById("selected").textContent=
+"🌍 "+region;
+
+document.getElementById("region").textContent=
+"Regional simulation";
+
+let climates={
+"North America":"Temperate / Continental",
+"South America":"Tropical / Temperate",
+"Europe":"Temperate",
+"Africa":"Tropical / Arid",
+"Asia":"Continental / Tropical",
+"Australia":"Arid / Temperate",
+"Arctic":"Polar",
+"Antarctica":"Polar"
+};
+
+document.getElementById("climate").textContent=
+climates[region]||"Mixed";
+
+update();
+
+}
+
+
+/* =========================
+   DIRECTION
+========================= */
+
+function directionName(v){
+
+const dirs=[
+"N","NNE","NE","ENE",
+"E","ESE","SE","SSE",
+"S","SSW","SW","WSW",
+"W","WNW","NW","NNW"
+];
+
+return dirs[Math.round(v/22.5)%16];
+
+}
+
+
+/* =========================
+   WEATHER ENGINE
+========================= */
+
+function update(){
+
+let t=+temp.value;
+let h=+humidity.value;
+let c=+cloud.value;
+let p=+precip.value;
+let w=+wind.value;
+
+let condition="Clear";
+let type="None";
+
+
+if(t<=0 && p>15){
+
+condition="Snow";
+type="Snow";
+
+}
+
+else if(p>75 && c>70 && w>60){
+
+condition="Thunderstorm";
+type="Heavy Rain";
+
+}
+
+else if(p>60){
+
+condition="Heavy Rain";
+type="Heavy Rain";
+
+}
+
+else if(p>15){
+
+condition="Rain";
+type="Rain";
+
+}
+
+else if(c>80){
+
+condition="Overcast";
+
+}
+
+else if(c>35){
+
+condition="Partly Cloudy";
+
+}
+
+if(t>=35 && p<15){
+
+condition="Heatwave";
+
+}
+
+if(t<=-15 && p<15){
+
+condition="Extreme Cold";
+
+}
+
+
+/* FEELS LIKE */
+
+let feels=t;
+
+if(t>=20){
+
+feels=t+(h-40)*.1;
+
+}
+
+if(t<=10){
+
+feels=t-w*.06;
+
+}
+
+
+/* DEW POINT */
+
+let dew=t-(100-h)/5;
+
+
+/* PRESSURE */
+
+let pressureValue=
+Math.round(1015-p*.25-w*.04);
+
+
+/* VISIBILITY */
+
+let vis=20;
+
+if(h>85)vis-=6;
+
+if(p>40)vis-=p*.12;
+
+if(condition==="Heavy Rain")vis=5;
+
+vis=Math.max(.3,vis);
+
+
+/* UV */
+
+let uv=0;
+
+if(hour>=7 && hour<=18){
+
+uv=Math.round(
+8*(1-c/140)*
+(1-Math.abs(12-hour)/8)
+);
+
+uv=Math.max(0,uv);
+
+}
+
+
+/* OUTPUT */
+
+document.getElementById("tv").textContent=t+"°C";
+document.getElementById("hv").textContent=h+"%";
+document.getElementById("cv").textContent=c+"%";
+document.getElementById("pv").textContent=p+"%";
+document.getElementById("wv").textContent=w+" km/h";
+document.getElementById("dv").textContent=
+directionName(+direction.value);
+
+document.getElementById("dt").textContent=t+"°C";
+
+document.getElementById("dh").textContent=h+"%";
+
+document.getElementById("dw").textContent=w;
+
+document.getElementById("windInfo").textContent=
+"km/h • "+directionName(+direction.value);
+
+document.getElementById("dp").textContent=p+"%";
+
+document.getElementById("ptype").textContent=type;
+
+document.getElementById("pressure").textContent=
+pressureValue;
+
+document.getElementById("visibility").textContent=
+vis.toFixed(1)+" km";
+
+document.getElementById("dew").textContent=
+Math.round(dew)+"°C";
+
+document.getElementById("uv").textContent=uv;
+
+document.getElementById("feels").textContent=
+"Feels like "+Math.round(feels)+"°C";
+
+
+/* WARNING */
+
+let warning=document.getElementById("warning");
+
+if(w>100){
+
+warning.style.display="block";
+
+warning.textContent=
+"⚠️ EXTREME WIND WARNING • "+
+w+" km/h";
+
+}
+
+else if(p>80){
+
+warning.style.display="block";
+
+warning.textContent=
+"⚠️ HEAVY PRECIPITATION WARNING";
+
+}
+
+else{
+
+warning.style.display="none";
+
+}
+
+
+/* SEASON */
+
+updateSeason();
+
+}
+
+
+/* =========================
+   SEASONS
+========================= */
+
+function updateSeason(){
+
+let northern=[
+"Winter",
+"Winter",
+"Winter",
+"Spring",
+"Spring",
+"Spring",
+"Summer",
+"Summer",
+"Summer",
+"Autumn",
+"Autumn",
+"Autumn"
+];
+
+let southern=[
+"Summer",
+"Summer",
+"Summer",
+"Autumn",
+"Autumn",
+"Autumn",
+"Winter",
+"Winter",
+"Winter",
+"Spring",
+"Spring",
+"Spring"
+];
+
+let hemi=document.getElementById("hemisphere").textContent;
+
+let arr=
+hemi==="Southern"?southern:northern;
+
+document.getElementById("season").textContent=
+arr[month-1];
+
+document.getElementById("date").textContent=
+month+"/"+day;
+
+}
+
+
+/* =========================
+   TIME
+========================= */
+
+function startTime(){
+
+if(timer)return;
+
+document.getElementById("timeStatus").textContent=
+"Simulation running ▶";
+
+timer=setInterval(()=>{
+
+hour++;
+
+if(hour>=24){
+
+hour=0;
+day++;
+
+if(day>30){
+
+day=1;
+month++;
+
+if(month>12)month=1;
+
+}
+
+}
+
+updateSeason();
+
+},1000);
+
+}
+
+
+function pauseTime(){
+
+clearInterval(timer);
+
+timer=null;
+
+document.getElementById("timeStatus").textContent=
+"Simulation paused";
+
+}
+
+
+function addHour(){
+
+hour++;
+
+if(hour>=24)hour=0;
+
+updateSeason();
+
+}
+
+
+function addDay(){
+
+day++;
+
+if(day>30){
+
+day=1;
+month++;
+
+if(month>12)month=1;
+
+}
+
+updateSeason();
+
+}
+
+
+function resetTime(){
+
+pauseTime();
+
+hour=12;
+day=21;
+month=6;
+
+updateSeason();
+
+}
+
+
+/* =========================
+   PRESETS
+========================= */
+
+function preset(x){
+
+if(x==="clear"){
+
+temp.value=24;
+humidity.value=40;
+cloud.value=5;
+precip.value=0;
+wind.value=8;
+
+}
+
+if(x==="rain"){
+
+temp.value=15;
+humidity.value=90;
+cloud.value=95;
+precip.value=75;
+wind.value=25;
+
+}
+
+if(x==="snow"){
+
+temp.value=-3;
+humidity.value=90;
+cloud.value=95;
+precip.value=65;
+wind.value=20;
+
+}
+
+if(x==="storm"){
+
+temp.value=22;
+humidity.value=92;
+cloud.value=100;
+precip.value=95;
+wind.value=90;
+
+}
+
+if(x==="heat"){
+
+temp.value=40;
+humidity.value=25;
+cloud.value=5;
+precip.value=0;
+wind.value=15;
+
+}
+
+if(x==="blizzard"){
+
+temp.value=-15;
+humidity.value=95;
+cloud.value=100;
+precip.value=95;
+wind.value=130;
+
+}
+
+if(x==="fog"){
+
+temp.value=8;
+humidity.value=98;
+cloud.value=95;
+precip.value=5;
+wind.value=3;
+
+}
+
+update();
+
+}
+
+
+/* =========================
+   EXTREME WEATHER
+========================= */
+
+function spawnHurricane(){
+
+let map=document.getElementById("map");
+
+let storm=document.createElement("div");
+
+storm.className="stormMarker";
+
+storm.textContent="🌀";
+
+storm.style.left=
+(25+Math.random()*50)+"%";
+
+storm.style.top=
+(25+Math.random()*45)+"%";
+
+storm.title="Hurricane";
+
+map.appendChild(storm);
+
+document.getElementById("stormStatus").textContent=
+"🌀 ACTIVE HURRICANE";
+
+}
+
+
+function spawnTornado(){
+
+let map=document.getElementById("map");
+
+let storm=document.createElement("div");
+
+storm.className="stormMarker";
+
+storm.textContent="🌪️";
+
+storm.style.left=
+(15+Math.random()*70)+"%";
+
+storm.style.top=
+(25+Math.random()*50)+"%";
+
+storm.title="Tornado";
+
+map.appendChild(storm);
+
+document.getElementById("stormStatus").textContent=
+"🌪️ ACTIVE TORNADO";
+
+}
+
+
+function spawnTropical(){
+
+let map=document.getElementById("map");
+
+let storm=document.createElement("div");
+
+storm.className="stormMarker";
+
+storm.textContent="🌴";
+
+storm.style.left=
+(20+Math.random()*60)+"%";
+
+storm.style.top=
+(30+Math.random()*40)+"%";
+
+storm.title="Tropical Storm";
+
+map.appendChild(storm);
+
+document.getElementById("stormStatus").textContent=
+"🌴 ACTIVE TROPICAL STORM";
+
+}
+
+
+function clearStorms(){
+
+document
+.querySelectorAll(".stormMarker")
+.forEach(x=>x.remove());
+
+document.getElementById("stormStatus").textContent=
+"No active severe systems";
+
+}
+
+
+/* =========================
+   RANDOM WORLD
+========================= */
+
+function randomWeather(){
+
+temp.value=
+Math.floor(Math.random()*81)-30;
+
+humidity.value=
+Math.floor(Math.random()*101);
+
+cloud.value=
+Math.floor(Math.random()*101);
+
+precip.value=
+Math.floor(Math.random()*101);
+
+wind.value=
+Math.floor(Math.random()*151);
+
+direction.value=
+Math.floor(Math.random()*360);
+
+update();
+
+}
+
+
+/* =========================
+   INPUTS
+========================= */
+
+[
+temp,
+humidity,
+cloud,
+precip,
+wind,
+direction
+].forEach(x=>{
+x.addEventListener("input",update);
+});
+
+
+/* =========================
+   START
+========================= */
+
+update();
+updateSeason();
+
+</script>
+
+</body>
+  </html>
